@@ -1,61 +1,193 @@
 export const injectedJavaScript = `
 (function() {
   if (window.__codexInstalled) {
-    window.__codexCollectVideos && window.__codexCollectVideos();
+    if (window.__codexCollectVideos) window.__codexCollectVideos();
     true;
     return;
   }
+
   window.__codexInstalled = true;
-  const state = { activeVideo: null, savedStyle: '', savedOverflow: '', savedControls: false };
-  const send = (payload) => window.ReactNativeWebView.postMessage(JSON.stringify(payload));
-  const ensureId = (video) => {
-    if (!video.dataset.codexVideoId) video.dataset.codexVideoId = 'codex-' + Math.random().toString(36).slice(2, 10);
+
+  const state = {
+    activeVideo: null,
+    savedStyle: '',
+    savedOverflow: '',
+    savedControls: false,
+    videoMap: {},
+    scrollStartX: 0,
+    scrollStartY: 0,
+    scrollMoved: false,
+    blockNextClick: false,
+  };
+
+  const send = (payload) => window.ReactNativeWebView && window.ReactNativeWebView.postMessage(JSON.stringify(payload));
+  const allowedNavigationPattern = /^(https?:|about:blank|blob:|data:|javascript:)/i;
+
+  const safePlay = (video) => {
+    try {
+      const result = video && video.play ? video.play() : null;
+      if (result && typeof result.catch === 'function') {
+        result.catch(() => {});
+      }
+    } catch (error) {}
+  };
+
+  const isDirectMedia = (url) => /(?:https?:)?\\/\\/[^\\s"'<>]+?\\.(?:m3u8|mp4|m4v|mov|webm)(?:\\?[^\\s"'<>]*)?$/i.test(url || '');
+
+  const absolutize = (url, base) => {
+    try {
+      return new URL(url, base || location.href).toString();
+    } catch (error) {
+      if (!url) return '';
+      if (/^https?:/i.test(url)) return url;
+      if (url.startsWith('//')) return location.protocol + url;
+      return url;
+    }
+  };
+
+  const ensureId = (video, prefix) => {
+    if (!video.dataset.codexVideoId) {
+      video.dataset.codexVideoId = (prefix || 'video') + '-' + Math.random().toString(36).slice(2, 10);
+    }
     return video.dataset.codexVideoId;
   };
-  const guessTitle = (video) => {
-    const box = video.closest('article, section, div');
-    const titleNode = box && box.querySelector('h1, h2, h3, .title, [title]');
-    return video.getAttribute('title') || video.getAttribute('aria-label') || (titleNode && titleNode.textContent ? titleNode.textContent.trim() : '') || document.title || '网页视频';
+
+  const registerVideo = (video) => {
+    const id = ensureId(video, 'video');
+    state.videoMap[id] = video;
+    return id;
   };
+
+  const guessTitle = (node, rootDocument) => {
+    const ownerDocument = rootDocument || document;
+    const box = node && node.closest ? node.closest('article, section, div, figure') : null;
+    const titleNode = box && box.querySelector ? box.querySelector('h1, h2, h3, .title, [title]') : null;
+    return (node && (node.getAttribute('title') || node.getAttribute('aria-label')))
+      || (titleNode && titleNode.textContent ? titleNode.textContent.trim() : '')
+      || ownerDocument.title
+      || 'Web video';
+  };
+
+  const extractScriptSources = (rootDocument, kind, baseUrl) => {
+    const results = [];
+    const seen = {};
+    const ownerWindow = rootDocument.defaultView || window;
+
+    const pushUrl = (rawUrl) => {
+      const absoluteUrl = absolutize(rawUrl, baseUrl);
+      if (!absoluteUrl || seen[absoluteUrl] || !isDirectMedia(absoluteUrl)) return;
+      seen[absoluteUrl] = true;
+      results.push({
+        id: 'script-' + Math.random().toString(36).slice(2, 10),
+        url: absoluteUrl,
+        title: rootDocument.title || document.title || 'Embedded stream',
+        poster: '',
+        width: 0,
+        height: 0,
+        paused: false,
+        kind,
+      });
+    };
+
+    if (typeof ownerWindow.now === 'string') {
+      pushUrl(ownerWindow.now);
+    }
+
+    Array.from(rootDocument.scripts || []).forEach((script) => {
+      const text = script.textContent || '';
+      const pattern = /(?:https?:)?\\/\\/[^\\s"'<>]+?\\.(?:m3u8|mp4|m4v|mov|webm)(?:\\?[^\\s"'<>]*)?/ig;
+      let match = null;
+      while ((match = pattern.exec(text))) {
+        pushUrl(match[0]);
+      }
+    });
+
+    return results;
+  };
+
+  const collectTopDocumentVideos = () => (
+    Array.from(document.querySelectorAll('video'))
+      .map((video) => ({
+        id: registerVideo(video),
+        url: video.currentSrc || video.src || '',
+        title: guessTitle(video, document),
+        poster: video.poster || '',
+        width: video.videoWidth || 0,
+        height: video.videoHeight || 0,
+        paused: !!video.paused,
+        kind: 'html5-video',
+      }))
+      .filter((video) => !!video.url)
+  );
+
+  const collectEmbeddedMedia = () => {
+    const items = [];
+
+    Array.from(document.querySelectorAll('iframe')).forEach((iframe) => {
+      try {
+        const frameWindow = iframe.contentWindow;
+        const frameDocument = frameWindow && frameWindow.document;
+        if (!frameDocument) return;
+
+        Array.from(frameDocument.querySelectorAll('video')).forEach((video) => {
+          const url = video.currentSrc || video.src || '';
+          if (!url) return;
+          items.push({
+            id: 'embedded-' + Math.random().toString(36).slice(2, 10),
+            url: absolutize(url, frameWindow.location.href),
+            title: guessTitle(video, frameDocument),
+            poster: video.poster || '',
+            width: video.videoWidth || 0,
+            height: video.videoHeight || 0,
+            paused: !!video.paused,
+            kind: 'native-stream',
+          });
+        });
+
+        items.push.apply(items, extractScriptSources(frameDocument, 'native-stream', frameWindow.location.href));
+      } catch (error) {}
+    });
+
+    return items;
+  };
+
+  const dedupeCandidates = (items) => {
+    const byUrl = {};
+
+    items.forEach((item) => {
+      if (!item.url) return;
+      const key = item.url;
+      if (!byUrl[key]) {
+        byUrl[key] = item;
+        return;
+      }
+
+      if (byUrl[key].kind !== 'html5-video' && item.kind === 'html5-video') {
+        byUrl[key] = item;
+      }
+    });
+
+    return Object.keys(byUrl).map((key) => byUrl[key]);
+  };
+
   const getVideos = () => {
-    const nativeVideos = Array.from(document.querySelectorAll('video')).map((video) => ({
-      id: ensureId(video),
-      url: video.currentSrc || video.src || '',
-      title: guessTitle(video),
-      poster: video.poster || '',
-      width: video.videoWidth || 0,
-      height: video.videoHeight || 0,
-      paused: !!video.paused,
-    })).filter((video) => !!video.url);
-    const iframeVideos = Array.from(document.querySelectorAll('iframe')).map((iframe, index) => ({
-      id: iframe.id || 'iframe-video-' + index,
-      url: iframe.src || '',
-      title: (iframe.title || document.title || '网页播放器'),
-      poster: '',
-      width: iframe.clientWidth || 0,
-      height: iframe.clientHeight || 0,
-      paused: false,
-    })).filter((item) => !!item.url);
-    const scriptVideo = typeof window.now === 'string' && window.now ? [{
-      id: 'script-video-now',
-      url: window.now,
-      title: document.title || '脚本视频源',
-      poster: '',
-      width: 0,
-      height: 0,
-      paused: false,
-    }] : [];
-    return [...nativeVideos, ...iframeVideos, ...scriptVideo];
+    state.videoMap = {};
+    const topVideos = collectTopDocumentVideos();
+    const pageScripts = extractScriptSources(document, 'native-stream', location.href);
+    const embeddedMedia = collectEmbeddedMedia();
+    return dedupeCandidates([].concat(topVideos, pageScripts, embeddedMedia));
   };
-  const findVideo = (id) => Array.from(document.querySelectorAll('video')).find((video) => ensureId(video) === id) || null;
+
+  const findVideo = (id) => state.videoMap[id] || null;
+
   const snapshot = (video) => {
     if (!video) return;
     send({
       type: 'playerState',
       state: {
-        id: ensureId(video),
+        id: ensureId(video, 'video'),
         url: video.currentSrc || video.src || '',
-        title: guessTitle(video),
+        title: guessTitle(video, video.ownerDocument || document),
         currentTime: Number(video.currentTime || 0),
         duration: Number(isFinite(video.duration) ? video.duration : 0),
         paused: !!video.paused,
@@ -64,17 +196,30 @@ export const injectedJavaScript = `
       },
     });
   };
+
   const collect = () => {
-    send({ type: 'videosFound', title: document.title || '', pageUrl: location.href, videos: getVideos() });
+    const videos = getVideos();
+    send({
+      type: 'videosFound',
+      title: document.title || '',
+      pageUrl: location.href,
+      videos,
+    });
     if (state.activeVideo) snapshot(state.activeVideo);
   };
+
   const enterFocus = (id) => {
     const video = findVideo(id);
-    if (!video) return send({ type: 'focusError', message: '没有找到对应的视频元素。' });
+    if (!video) {
+      send({ type: 'focusError', message: 'No matching HTML5 video element was found on this page.' });
+      return;
+    }
+
     state.activeVideo = video;
     state.savedStyle = video.getAttribute('style') || '';
     state.savedOverflow = document.body.style.overflow || '';
     state.savedControls = !!video.controls;
+
     document.body.style.overflow = 'hidden';
     video.controls = false;
     video.setAttribute('playsinline', 'true');
@@ -87,9 +232,10 @@ export const injectedJavaScript = `
     video.style.zIndex = '2147483647';
     video.style.background = '#000';
     video.style.objectFit = 'contain';
-    try { video.play(); } catch (error) {}
+    safePlay(video);
     snapshot(video);
   };
+
   const exitFocus = () => {
     if (!state.activeVideo) return;
     state.activeVideo.setAttribute('style', state.savedStyle);
@@ -98,22 +244,112 @@ export const injectedJavaScript = `
     state.activeVideo = null;
     collect();
   };
+
+  const shouldBlockNavigation = (url) => !!url && !allowedNavigationPattern.test(url);
+
+  const normalizeAnchors = () => {
+    Array.from(document.querySelectorAll('a[target="_blank"]')).forEach((anchor) => {
+      anchor.setAttribute('target', '_self');
+      anchor.setAttribute('rel', 'noopener');
+    });
+  };
+
   window.__codexCollectVideos = collect;
+
   window.__codexHandleCommand = (command) => {
     if (!command || !command.action) return true;
-    if (command.action === 'enterFocus') return enterFocus(command.id), true;
-    if (command.action === 'exitFocus') return exitFocus(), true;
+
+    if (command.action === 'enterFocus') {
+      enterFocus(command.id);
+      return true;
+    }
+
+    if (command.action === 'exitFocus') {
+      exitFocus();
+      return true;
+    }
+
     const video = (command.id && findVideo(command.id)) || state.activeVideo || document.querySelector('video');
-    if (!video) return send({ type: 'focusError', message: '当前页面没有可控制的视频。' }), true;
-    if (command.action === 'play') video.play && video.play();
-    if (command.action === 'pause') video.pause && video.pause();
-    if (command.action === 'togglePlay') video.paused ? video.play && video.play() : video.pause && video.pause();
+    if (!video) {
+      send({ type: 'focusError', message: 'No controllable HTML5 video is active on this page.' });
+      return true;
+    }
+
+    if (command.action === 'play') safePlay(video);
+    if (command.action === 'pause' && video.pause) video.pause();
+    if (command.action === 'togglePlay') video.paused ? safePlay(video) : video.pause && video.pause();
     if (command.action === 'setRate') video.playbackRate = Number(command.value || 1);
     if (command.action === 'setVolume') video.volume = Math.max(0, Math.min(1, Number(command.value || 0)));
     if (command.action === 'seekBy') video.currentTime = Math.max(0, Number(video.currentTime || 0) + Number(command.value || 0));
+    if (command.action === 'seekTo') video.currentTime = Math.max(0, Number(command.value || 0));
+
     snapshot(video);
     return true;
   };
+
+  window.open = function(url) {
+    if (!url) return null;
+    const resolved = absolutize(url, location.href);
+    if (shouldBlockNavigation(resolved)) {
+      send({ type: 'blockedExternalNavigation', url: resolved });
+      return null;
+    }
+    location.href = resolved;
+    return null;
+  };
+
+  document.addEventListener('touchstart', (event) => {
+    const touch = event.touches && event.touches[0];
+    if (!touch) return;
+    state.scrollStartX = touch.clientX;
+    state.scrollStartY = touch.clientY;
+    state.scrollMoved = false;
+  }, true);
+
+  document.addEventListener('touchmove', (event) => {
+    const touch = event.touches && event.touches[0];
+    if (!touch) return;
+    if (Math.abs(touch.clientX - state.scrollStartX) > 8 || Math.abs(touch.clientY - state.scrollStartY) > 8) {
+      state.scrollMoved = true;
+      state.blockNextClick = true;
+    }
+  }, true);
+
+  document.addEventListener('touchend', () => {
+    setTimeout(() => {
+      state.scrollMoved = false;
+    }, 0);
+  }, true);
+
+  document.addEventListener('click', (event) => {
+    const target = event.target && event.target.closest ? event.target.closest('a, button, [onclick], [role="button"]') : null;
+    if (!target) return;
+
+    if (state.blockNextClick || state.scrollMoved) {
+      event.preventDefault();
+      event.stopPropagation();
+      state.blockNextClick = false;
+      return;
+    }
+
+    const href = target.href || target.getAttribute('href') || '';
+    if (!href) return;
+
+    const resolved = absolutize(href, location.href);
+    if (shouldBlockNavigation(resolved)) {
+      event.preventDefault();
+      event.stopPropagation();
+      send({ type: 'blockedExternalNavigation', url: resolved });
+      return;
+    }
+
+    if (target.tagName === 'A' && target.getAttribute('target') === '_blank') {
+      event.preventDefault();
+      event.stopPropagation();
+      location.href = resolved;
+    }
+  }, true);
+
   ['play', 'pause', 'ratechange', 'volumechange', 'loadedmetadata', 'timeupdate'].forEach((name) => {
     document.addEventListener(name, (event) => {
       if (event.target && event.target.tagName === 'VIDEO') {
@@ -122,8 +358,19 @@ export const injectedJavaScript = `
       }
     }, true);
   });
-  new MutationObserver(collect).observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['src', 'poster', 'style'] });
-  setInterval(collect, 2500);
+
+  normalizeAnchors();
+  new MutationObserver(() => {
+    normalizeAnchors();
+    collect();
+  }).observe(document.documentElement, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['src', 'href', 'poster', 'style', 'target'],
+  });
+
+  setInterval(collect, 2000);
   collect();
   true;
 })();

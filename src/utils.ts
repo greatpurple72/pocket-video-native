@@ -1,4 +1,5 @@
 const DEFAULT_URL = 'https://www.bilibili.com';
+const DIRECT_MEDIA_EXTENSIONS = ['.mp4', '.mov', '.m4v', '.webm', '.m3u8'];
 
 export function normalizeUrl(input: string) {
   const value = input.trim();
@@ -34,16 +35,29 @@ export function guessExtension(url: string) {
 }
 
 export function isOfflineFriendly(url: string) {
-  return guessExtension(url) !== '.m3u8';
+  return DIRECT_MEDIA_EXTENSIONS.includes(guessExtension(url));
 }
 
 export function offlineReason(url: string) {
-  if (guessExtension(url) === '.m3u8') {
-    return '当前抓到的是 m3u8 流媒体地址，先不做离线下载，避免保存后不能直接播放。';
+  const extension = guessExtension(url);
+  if (!DIRECT_MEDIA_EXTENSIONS.includes(extension)) {
+    return 'This source does not look like a direct MP4, WEBM, MOV, M4V, or M3U8 media URL.';
   }
-  return '这个媒体源暂时不适合直接离线。';
+  return 'This media source could not be downloaded with the current offline flow.';
 }
 
 export function makeId(prefix: string) {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+export function isHlsUrl(url: string) {
+  return guessExtension(url) === '.m3u8';
+}
+
+export function resolveUrl(value: string, base: string) {
+  try {
+    return new URL(value, base).toString();
+  } catch (error) {
+    return value;
+  }
 }

@@ -2,6 +2,7 @@ export type VideoCandidate = {
   id: string;
   url: string;
   title: string;
+  kind: 'html5-video' | 'native-stream';
   poster?: string;
   width?: number;
   height?: number;
@@ -25,6 +26,8 @@ export type DownloadItem = {
   remoteUrl: string;
   sourcePage: string;
   fileUri: string;
+  localRootUri?: string;
+  mediaKind?: 'file' | 'hls';
   downloadedAt: string;
   status?: 'downloading' | 'completed' | 'failed';
   progress?: number;
