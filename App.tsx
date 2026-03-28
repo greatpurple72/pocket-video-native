@@ -49,6 +49,7 @@ type PlaybackTarget = {
   sourceUri: string;
   mode: 'stream' | 'download';
   candidate?: VideoCandidate | null;
+  contentType?: 'auto' | 'hls';
 };
 
 type TapSide = 'left' | 'right';
@@ -283,7 +284,11 @@ export default function App() {
 
     const load = async () => {
       try {
-        await offlinePlayer.replaceAsync(currentPlayback.sourceUri);
+        await offlinePlayer.replaceAsync(
+          currentPlayback.contentType && currentPlayback.contentType !== 'auto'
+            ? { uri: currentPlayback.sourceUri, contentType: currentPlayback.contentType }
+            : currentPlayback.sourceUri
+        );
         if (!alive) return;
 
         offlinePlayer.volume = offlineVolume;
@@ -458,6 +463,7 @@ export default function App() {
         sourceUri: video.url,
         mode: 'stream',
         candidate: video,
+        contentType: isHlsUrl(video.url) ? 'hls' : 'auto',
       });
       return;
     }
@@ -539,6 +545,7 @@ export default function App() {
       sourceUri: item.fileUri,
       mode: 'download',
       candidate: null,
+      contentType: item.mediaKind === 'hls' ? 'hls' : 'auto',
     });
   }
 
@@ -554,6 +561,7 @@ export default function App() {
         url: item.remoteUrl,
         kind: 'native-stream',
       },
+      contentType: isHlsUrl(item.remoteUrl) ? 'hls' : 'auto',
     });
   }
 
