@@ -219,6 +219,7 @@ export default function App() {
     player.volume = 1;
     player.playbackRate = 1;
     player.loop = false;
+    player.preservesPitch = false;
   });
 
   const webDuration = snapshot?.duration || 0;
@@ -264,6 +265,7 @@ export default function App() {
         if (!alive) return;
 
         offlinePlayer.volume = offlineVolume;
+        offlinePlayer.preservesPitch = false;
         offlinePlayer.playbackRate = offlineRate;
         offlinePlayer.play();
         setOfflinePaused(false);
@@ -318,6 +320,7 @@ export default function App() {
 
   useEffect(() => {
     if (!selectedPlayback || gestureRef.current.holdActive) return;
+    offlinePlayer.preservesPitch = false;
     offlinePlayer.playbackRate = offlineRate;
   }, [offlinePlayer, offlineRate, selectedPlayback]);
 

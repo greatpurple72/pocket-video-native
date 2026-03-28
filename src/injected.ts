@@ -18,6 +18,7 @@ export const injectedJavaScript = `
     scrollStartY: 0,
     scrollMoved: false,
     blockNextClick: false,
+    lastScrollAt: 0,
   };
 
   const send = (payload) => window.ReactNativeWebView && window.ReactNativeWebView.postMessage(JSON.stringify(payload));
@@ -25,12 +26,21 @@ export const injectedJavaScript = `
 
   const safePlay = (video) => {
     try {
+      if ('preservesPitch' in video) {
+        video.preservesPitch = false;
+      }
+      if ('webkitPreservesPitch' in video) {
+        video.webkitPreservesPitch = false;
+      }
       const result = video && video.play ? video.play() : null;
       if (result && typeof result.catch === 'function') {
         result.catch(() => {});
       }
     } catch (error) {}
   };
+
+  const actionableTarget = (target) => target && target.closest ? target.closest('a, button, [onclick], [role="button"], input, label, summary') : null;
+  const shouldSuppressTap = () => state.blockNextClick || state.scrollMoved || (Date.now() - state.lastScrollAt < 450);
 
   const isDirectMedia = (url) => /(?:https?:)?\\/\\/[^\\s"'<>]+?\\.(?:m3u8|mp4|m4v|mov|webm)(?:\\?[^\\s"'<>]*)?$/i.test(url || '');
 
@@ -278,7 +288,15 @@ export const injectedJavaScript = `
     if (command.action === 'play') safePlay(video);
     if (command.action === 'pause' && video.pause) video.pause();
     if (command.action === 'togglePlay') video.paused ? safePlay(video) : video.pause && video.pause();
-    if (command.action === 'setRate') video.playbackRate = Number(command.value || 1);
+    if (command.action === 'setRate') {
+      if ('preservesPitch' in video) {
+        video.preservesPitch = false;
+      }
+      if ('webkitPreservesPitch' in video) {
+        video.webkitPreservesPitch = false;
+      }
+      video.playbackRate = Number(command.value || 1);
+    }
     if (command.action === 'setVolume') video.volume = Math.max(0, Math.min(1, Number(command.value || 0)));
     if (command.action === 'seekBy') video.currentTime = Math.max(0, Number(video.currentTime || 0) + Number(command.value || 0));
     if (command.action === 'seekTo') video.currentTime = Math.max(0, Number(command.value || 0));
@@ -312,20 +330,37 @@ export const injectedJavaScript = `
     if (Math.abs(touch.clientX - state.scrollStartX) > 8 || Math.abs(touch.clientY - state.scrollStartY) > 8) {
       state.scrollMoved = true;
       state.blockNextClick = true;
+      state.lastScrollAt = Date.now();
     }
   }, true);
 
-  document.addEventListener('touchend', () => {
+  document.addEventListener('touchend', (event) => {
+    const target = actionableTarget(event.target);
+    if (target && shouldSuppressTap()) {
+      event.preventDefault();
+      event.stopPropagation();
+      state.blockNextClick = false;
+      return;
+    }
+
+    if (state.scrollMoved) {
+      state.lastScrollAt = Date.now();
+    }
     setTimeout(() => {
       state.scrollMoved = false;
     }, 0);
   }, true);
 
+  document.addEventListener('touchcancel', () => {
+    state.scrollMoved = false;
+    state.blockNextClick = false;
+  }, true);
+
   document.addEventListener('click', (event) => {
-    const target = event.target && event.target.closest ? event.target.closest('a, button, [onclick], [role="button"]') : null;
+    const target = actionableTarget(event.target);
     if (!target) return;
 
-    if (state.blockNextClick || state.scrollMoved) {
+    if (shouldSuppressTap()) {
       event.preventDefault();
       event.stopPropagation();
       state.blockNextClick = false;
