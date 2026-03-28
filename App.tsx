@@ -175,15 +175,17 @@ export default function App() {
   const gestureRef = useRef({
     holdTimer: null as ReturnType<typeof setTimeout> | null,
     tapTimer: null as ReturnType<typeof setTimeout> | null,
+    hudTimer: null as ReturnType<typeof setTimeout> | null,
     holdActive: false,
     moved: false,
     startBrightness: 0.5,
     startVolume: 1,
     holdRestoreRate: 1,
+    activeSide: 'left' as TapSide,
     lastTapAt: 0,
     lastTapSide: 'left' as TapSide,
   });
-  const timelineRef = useRef({ web: 0, native: 0 });
+  const timelineRef = useRef({ web: 0, native: 0, webAnchorX: 0, nativeAnchorX: 0 });
 
   const [addressInput, setAddressInput] = useState(DEFAULT_URL);
   const [currentUrl, setCurrentUrl] = useState(DEFAULT_URL);
@@ -211,6 +213,7 @@ export default function App() {
   const [nativeTimelineWidth, setNativeTimelineWidth] = useState(0);
   const [webScrubTime, setWebScrubTime] = useState<number | null>(null);
   const [nativeScrubTime, setNativeScrubTime] = useState<number | null>(null);
+  const [gestureMessage, setGestureMessage] = useState<string | null>(null);
 
   const offlinePlayer = useVideoPlayer(null, (player) => {
     player.volume = 1;
@@ -245,6 +248,7 @@ export default function App() {
     return () => {
       if (gestureRef.current.holdTimer) clearTimeout(gestureRef.current.holdTimer);
       if (gestureRef.current.tapTimer) clearTimeout(gestureRef.current.tapTimer);
+      if (gestureRef.current.hudTimer) clearTimeout(gestureRef.current.hudTimer);
     };
   }, []);
 
@@ -319,12 +323,13 @@ export default function App() {
 
   useEffect(() => {
     if (!(webFullscreen || selectedPlayback) || !showControls) return;
+    if (webScrubTime !== null || nativeScrubTime !== null) return;
     const isPlaying = selectedPlayback ? !offlinePaused : !snapshot?.paused;
     if (!isPlaying) return;
 
     const timer = setTimeout(() => setShowControls(false), 1000);
     return () => clearTimeout(timer);
-  }, [offlinePaused, selectedPlayback, showControls, snapshot?.paused, webFullscreen]);
+  }, [nativeScrubTime, offlinePaused, selectedPlayback, showControls, snapshot?.paused, webFullscreen, webScrubTime]);
 
   function updateDownloadItem(id: string, updater: (item: DownloadItem) => DownloadItem) {
     setDownloads((items) => items.map((item) => (item.id === id ? updater(item) : item)));
@@ -334,10 +339,18 @@ export default function App() {
     webViewRef.current?.injectJavaScript(`window.__codexHandleCommand(${JSON.stringify(command)}); true;`);
   }
 
-  async function setBrightnessLevel(value: number) {
+  function showGestureMessage(message: string) {
+    setGestureMessage(message);
+    if (gestureRef.current.hudTimer) {
+      clearTimeout(gestureRef.current.hudTimer);
+    }
+    gestureRef.current.hudTimer = setTimeout(() => setGestureMessage(null), 700);
+  }
+
+  function setBrightnessLevel(value: number) {
     const next = clamp(value, 0.05, 1);
     setBrightness(next);
-    await Brightness.setBrightnessAsync(next).catch(() => {});
+    Brightness.setBrightnessAsync(next).catch(() => {});
   }
 
   function submitAddress() {
@@ -760,6 +773,7 @@ export default function App() {
     gestureRef.current.holdTimer = setTimeout(() => {
       gestureRef.current.holdActive = true;
       gestureRef.current.holdRestoreRate = mode === 'web' ? baseRate : offlineRate;
+      showGestureMessage('Hold 1x');
 
       if (mode === 'web') {
         sendWebCommand({ action: 'setRate', id: selectedOnline?.id, value: 1 });
@@ -783,6 +797,8 @@ export default function App() {
       offlinePlayer.playbackRate = restoreRate;
       setOfflineRate(restoreRate);
     }
+
+    showGestureMessage(`${restoreRate.toFixed(2)}x`);
 
     return true;
   }
@@ -818,15 +834,18 @@ export default function App() {
     scheduleSingleTap();
   }
 
-  async function updateEdgeValue(mode: 'web' | 'native', side: TapSide, deltaY: number) {
-    const amount = deltaY * -0.0032;
+  function updateEdgeValue(mode: 'web' | 'native', side: TapSide, deltaY: number) {
+    const amount = deltaY * -0.0048;
 
     if (side === 'left') {
-      await setBrightnessLevel(gestureRef.current.startBrightness + amount);
+      const nextBrightness = gestureRef.current.startBrightness + amount;
+      setBrightnessLevel(nextBrightness);
+      showGestureMessage(`Brightness ${Math.round(clamp(nextBrightness, 0.05, 1) * 100)}%`);
       return;
     }
 
     const nextVolume = clamp(gestureRef.current.startVolume + amount, 0, 1);
+    showGestureMessage(`Volume ${Math.round(nextVolume * 100)}%`);
 
     if (mode === 'web') {
       setWebVolume(nextVolume);
@@ -843,15 +862,18 @@ export default function App() {
       PanResponder.create({
         onStartShouldSetPanResponder: () => true,
         onMoveShouldSetPanResponder: () => true,
+        onStartShouldSetPanResponderCapture: () => true,
+        onMoveShouldSetPanResponderCapture: () => true,
         onPanResponderGrant: (event) => {
           gestureRef.current.startBrightness = brightness;
           gestureRef.current.startVolume = webVolume;
           gestureRef.current.moved = false;
+          gestureRef.current.activeSide = getTapSide(event.nativeEvent.pageX);
           startHold('web');
           clearTapTimer();
-          gestureRef.current.lastTapSide = getTapSide(event.nativeEvent.pageX);
+          gestureRef.current.lastTapSide = gestureRef.current.activeSide;
         },
-        onPanResponderMove: async (event, gesture) => {
+        onPanResponderMove: (event, gesture) => {
           const hasMoved =
             Math.abs(gesture.dy) > GESTURE_MOVE_THRESHOLD || Math.abs(gesture.dx) > GESTURE_MOVE_THRESHOLD;
 
@@ -861,7 +883,7 @@ export default function App() {
           }
 
           if (!gestureRef.current.moved || gestureRef.current.holdActive) return;
-          await updateEdgeValue('web', getTapSide(event.nativeEvent.pageX), gesture.dy);
+          updateEdgeValue('web', gestureRef.current.activeSide, gesture.dy);
         },
         onPanResponderRelease: (event) => {
           if (finishHold('web')) return;
@@ -882,15 +904,18 @@ export default function App() {
       PanResponder.create({
         onStartShouldSetPanResponder: () => true,
         onMoveShouldSetPanResponder: () => true,
+        onStartShouldSetPanResponderCapture: () => true,
+        onMoveShouldSetPanResponderCapture: () => true,
         onPanResponderGrant: (event) => {
           gestureRef.current.startBrightness = brightness;
           gestureRef.current.startVolume = offlineVolume;
           gestureRef.current.moved = false;
+          gestureRef.current.activeSide = getTapSide(event.nativeEvent.pageX);
           startHold('native');
           clearTapTimer();
-          gestureRef.current.lastTapSide = getTapSide(event.nativeEvent.pageX);
+          gestureRef.current.lastTapSide = gestureRef.current.activeSide;
         },
-        onPanResponderMove: async (event, gesture) => {
+        onPanResponderMove: (event, gesture) => {
           const hasMoved =
             Math.abs(gesture.dy) > GESTURE_MOVE_THRESHOLD || Math.abs(gesture.dx) > GESTURE_MOVE_THRESHOLD;
 
@@ -900,7 +925,7 @@ export default function App() {
           }
 
           if (!gestureRef.current.moved || gestureRef.current.holdActive) return;
-          await updateEdgeValue('native', getTapSide(event.nativeEvent.pageX), gesture.dy);
+          updateEdgeValue('native', gestureRef.current.activeSide, gesture.dy);
         },
         onPanResponderRelease: (event) => {
           if (finishHold('native')) return;
@@ -924,11 +949,12 @@ export default function App() {
         onPanResponderGrant: (event) => {
           const value = getTimelineValue(event.nativeEvent.locationX, webTimelineWidth, webDuration);
           timelineRef.current.web = value;
+          timelineRef.current.webAnchorX = event.nativeEvent.locationX;
           setShowControls(true);
           setWebScrubTime(value);
         },
-        onPanResponderMove: (event) => {
-          const value = getTimelineValue(event.nativeEvent.locationX, webTimelineWidth, webDuration);
+        onPanResponderMove: (_event, gesture) => {
+          const value = getTimelineValue(timelineRef.current.webAnchorX + gesture.dx, webTimelineWidth, webDuration);
           timelineRef.current.web = value;
           setWebScrubTime(value);
         },
@@ -951,11 +977,16 @@ export default function App() {
         onPanResponderGrant: (event) => {
           const value = getTimelineValue(event.nativeEvent.locationX, nativeTimelineWidth, offlineDuration);
           timelineRef.current.native = value;
+          timelineRef.current.nativeAnchorX = event.nativeEvent.locationX;
           setShowControls(true);
           setNativeScrubTime(value);
         },
-        onPanResponderMove: (event) => {
-          const value = getTimelineValue(event.nativeEvent.locationX, nativeTimelineWidth, offlineDuration);
+        onPanResponderMove: (_event, gesture) => {
+          const value = getTimelineValue(
+            timelineRef.current.nativeAnchorX + gesture.dx,
+            nativeTimelineWidth,
+            offlineDuration
+          );
           timelineRef.current.native = value;
           setNativeScrubTime(value);
         },
@@ -1176,6 +1207,15 @@ export default function App() {
         {webFullscreen ? (
           <>
             <View style={styles.gestureLayer} {...webGestures.panHandlers} />
+            <View
+              pointerEvents="none"
+              style={[styles.brightnessMask, { opacity: clamp((1 - brightness) * 0.82, 0, 0.72) }]}
+            />
+            {gestureMessage ? (
+              <View pointerEvents="none" style={styles.gestureMessageWrap}>
+                <Text style={styles.gestureMessageText}>{gestureMessage}</Text>
+              </View>
+            ) : null}
             {renderWebControls()}
           </>
         ) : null}
@@ -1263,6 +1303,15 @@ export default function App() {
         <View style={styles.offlineScreen}>
           <VideoView player={offlinePlayer} style={styles.webView} contentFit="contain" nativeControls={false} />
           <View style={styles.gestureLayer} {...nativeGestures.panHandlers} />
+          <View
+            pointerEvents="none"
+            style={[styles.brightnessMask, { opacity: clamp((1 - brightness) * 0.82, 0, 0.72) }]}
+          />
+          {gestureMessage ? (
+            <View pointerEvents="none" style={styles.gestureMessageWrap}>
+              <Text style={styles.gestureMessageText}>{gestureMessage}</Text>
+            </View>
+          ) : null}
           {renderNativeControls()}
         </View>
       ) : null}
@@ -1357,6 +1406,26 @@ const styles = StyleSheet.create({
   gestureLayer: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 10,
+  },
+  brightnessMask: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#000',
+    zIndex: 11,
+  },
+  gestureMessageWrap: {
+    position: 'absolute',
+    top: '42%',
+    alignSelf: 'center',
+    zIndex: 22,
+    backgroundColor: 'rgba(0,0,0,0.66)',
+    borderRadius: 999,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  gestureMessageText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 13,
   },
   listArea: {
     flex: 1,
@@ -1497,29 +1566,29 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   timelineTrackWrap: {
-    height: 28,
+    height: 40,
     justifyContent: 'center',
   },
   timelineTrack: {
-    height: 6,
+    height: 8,
     borderRadius: 999,
     backgroundColor: 'rgba(255,255,255,0.22)',
   },
   timelineFill: {
     position: 'absolute',
     left: 0,
-    height: 6,
+    height: 8,
     borderRadius: 999,
     backgroundColor: '#f0b429',
   },
   timelineThumb: {
     position: 'absolute',
-    marginLeft: -9,
-    width: 18,
-    height: 18,
-    borderRadius: 9,
+    marginLeft: -12,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     backgroundColor: '#fff',
-    borderWidth: 3,
+    borderWidth: 4,
     borderColor: '#f0b429',
   },
   hintText: {
