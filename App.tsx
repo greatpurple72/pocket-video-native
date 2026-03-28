@@ -52,6 +52,7 @@ type PlaybackTarget = {
 };
 
 type TapSide = 'left' | 'right';
+type DoubleTapAction = 'seek-backward' | 'toggle-playback' | 'seek-forward';
 
 type HlsResource = {
   url: string;
@@ -99,6 +100,16 @@ function getTimelineValue(locationX: number, width: number, duration: number) {
 
 function formatRemainingTime(currentTime: number, duration: number) {
   return `-${formatTime(Math.max(duration - currentTime, 0))}`;
+}
+
+function getDoubleTapAction(pageX: number): DoubleTapAction {
+  const screenWidth = Dimensions.get('window').width;
+  const leftBoundary = screenWidth * 0.3;
+  const rightBoundary = screenWidth * 0.7;
+
+  if (pageX <= leftBoundary) return 'seek-backward';
+  if (pageX >= rightBoundary) return 'seek-forward';
+  return 'toggle-playback';
 }
 
 function pickHighestBandwidthVariant(text: string, baseUrl: string) {
@@ -183,9 +194,8 @@ export default function App() {
     holdRestoreRate: 1,
     activeSide: 'left' as TapSide,
     lastTapAt: 0,
-    lastTapSide: 'left' as TapSide,
   });
-  const timelineRef = useRef({ web: 0, native: 0, webAnchorX: 0, nativeAnchorX: 0 });
+  const timelineRef = useRef({ web: 0, native: 0, webAnchorTime: 0, nativeAnchorTime: 0 });
 
   const [addressInput, setAddressInput] = useState(DEFAULT_URL);
   const [currentUrl, setCurrentUrl] = useState(DEFAULT_URL);
@@ -231,10 +241,22 @@ export default function App() {
 
   useEffect(() => {
     AsyncStorage.getItem(STORAGE_KEY)
-      .then((raw) => {
-        if (raw) {
-          setDownloads(JSON.parse(raw) as DownloadItem[]);
-        }
+      .then(async (raw) => {
+        if (!raw) return;
+
+        const storedItems = JSON.parse(raw) as DownloadItem[];
+        const validatedItems = (
+          await Promise.all(
+            storedItems.map(async (item) => {
+              if (item.status !== 'completed') return item;
+              const target = item.localRootUri || item.fileUri;
+              const info = await FileSystem.getInfoAsync(target).catch(() => ({ exists: false }));
+              return info.exists ? item : null;
+            })
+          )
+        ).filter(Boolean) as DownloadItem[];
+
+        setDownloads(validatedItems);
       })
       .catch(() => setStatus('Could not read the saved download list, but playback is still available.'));
 
@@ -814,26 +836,33 @@ export default function App() {
     }, DOUBLE_TAP_MS);
   }
 
-  function handleTap(side: TapSide, mode: 'web' | 'native') {
+  function handleTap(pageX: number, mode: 'web' | 'native') {
     const now = Date.now();
     const isDoubleTap = now - gestureRef.current.lastTapAt < DOUBLE_TAP_MS;
 
     if (isDoubleTap) {
       clearTapTimer();
       gestureRef.current.lastTapAt = 0;
+      const action = getDoubleTapAction(pageX);
 
-      if (side === 'left') {
+      if (action === 'seek-backward') {
         if (mode === 'web') seekWebBy(-DOUBLE_TAP_SEEK_SECONDS);
         else seekNativeBy(-DOUBLE_TAP_SEEK_SECONDS);
-      } else {
+        return;
+      }
+
+      if (action === 'seek-forward') {
         if (mode === 'web') seekWebBy(DOUBLE_TAP_SEEK_SECONDS);
         else seekNativeBy(DOUBLE_TAP_SEEK_SECONDS);
+        return;
       }
+
+      if (mode === 'web') toggleWebPlayPause();
+      else toggleNativePlayPause();
       return;
     }
 
     gestureRef.current.lastTapAt = now;
-    gestureRef.current.lastTapSide = side;
     scheduleSingleTap();
   }
 
@@ -874,7 +903,6 @@ export default function App() {
           gestureRef.current.activeSide = getTapSide(event.nativeEvent.pageX);
           startHold('web');
           clearTapTimer();
-          gestureRef.current.lastTapSide = gestureRef.current.activeSide;
         },
         onPanResponderMove: (event, gesture) => {
           const hasMoved =
@@ -892,7 +920,7 @@ export default function App() {
           if (finishHold('web')) return;
           clearHoldTimer();
           if (gestureRef.current.moved) return;
-          handleTap(getTapSide(event.nativeEvent.pageX), 'web');
+          handleTap(event.nativeEvent.pageX, 'web');
         },
         onPanResponderTerminate: () => {
           finishHold('web');
@@ -916,7 +944,6 @@ export default function App() {
           gestureRef.current.activeSide = getTapSide(event.nativeEvent.pageX);
           startHold('native');
           clearTapTimer();
-          gestureRef.current.lastTapSide = gestureRef.current.activeSide;
         },
         onPanResponderMove: (event, gesture) => {
           const hasMoved =
@@ -934,7 +961,7 @@ export default function App() {
           if (finishHold('native')) return;
           clearHoldTimer();
           if (gestureRef.current.moved) return;
-          handleTap(getTapSide(event.nativeEvent.pageX), 'native');
+          handleTap(event.nativeEvent.pageX, 'native');
         },
         onPanResponderTerminate: () => {
           finishHold('native');
@@ -949,15 +976,18 @@ export default function App() {
       PanResponder.create({
         onStartShouldSetPanResponder: () => webDuration > 0,
         onMoveShouldSetPanResponder: () => webDuration > 0,
-        onPanResponderGrant: (event) => {
-          const value = getTimelineValue(event.nativeEvent.locationX, webTimelineWidth, webDuration);
-          timelineRef.current.web = value;
-          timelineRef.current.webAnchorX = event.nativeEvent.locationX;
+        onPanResponderGrant: () => {
+          timelineRef.current.web = displayedWebTime;
+          timelineRef.current.webAnchorTime = displayedWebTime;
           setShowControls(true);
-          setWebScrubTime(value);
+          setWebScrubTime(displayedWebTime);
         },
         onPanResponderMove: (_event, gesture) => {
-          const value = getTimelineValue(timelineRef.current.webAnchorX + gesture.dx, webTimelineWidth, webDuration);
+          const value = clamp(
+            timelineRef.current.webAnchorTime + (gesture.dx / Math.max(webTimelineWidth, 1)) * webDuration,
+            0,
+            webDuration
+          );
           timelineRef.current.web = value;
           setWebScrubTime(value);
         },
@@ -969,7 +999,7 @@ export default function App() {
           setWebScrubTime(null);
         },
       }),
-    [selectedOnline?.id, webDuration, webTimelineWidth]
+    [displayedWebTime, selectedOnline?.id, webDuration, webTimelineWidth]
   );
 
   const nativeTimelineResponder = useMemo(
@@ -977,17 +1007,16 @@ export default function App() {
       PanResponder.create({
         onStartShouldSetPanResponder: () => offlineDuration > 0,
         onMoveShouldSetPanResponder: () => offlineDuration > 0,
-        onPanResponderGrant: (event) => {
-          const value = getTimelineValue(event.nativeEvent.locationX, nativeTimelineWidth, offlineDuration);
-          timelineRef.current.native = value;
-          timelineRef.current.nativeAnchorX = event.nativeEvent.locationX;
+        onPanResponderGrant: () => {
+          timelineRef.current.native = displayedNativeTime;
+          timelineRef.current.nativeAnchorTime = displayedNativeTime;
           setShowControls(true);
-          setNativeScrubTime(value);
+          setNativeScrubTime(displayedNativeTime);
         },
         onPanResponderMove: (_event, gesture) => {
-          const value = getTimelineValue(
-            timelineRef.current.nativeAnchorX + gesture.dx,
-            nativeTimelineWidth,
+          const value = clamp(
+            timelineRef.current.nativeAnchorTime + (gesture.dx / Math.max(nativeTimelineWidth, 1)) * offlineDuration,
+            0,
             offlineDuration
           );
           timelineRef.current.native = value;
@@ -1001,7 +1030,7 @@ export default function App() {
           setNativeScrubTime(null);
         },
       }),
-    [nativeTimelineWidth, offlineDuration]
+    [displayedNativeTime, nativeTimelineWidth, offlineDuration]
   );
 
   function renderWebControls() {
@@ -1038,7 +1067,7 @@ export default function App() {
             </View>
 
             <Text style={styles.hintText}>
-              Left side: brightness | Right side: volume | Hold: temporary 1x | Double tap left/right: -30s / +30s
+              Left side: brightness | Right side: volume | Hold: temporary 1x | Double tap left/right: -30s / +30s | center: play/pause
             </Text>
           </View>
 
@@ -1114,7 +1143,7 @@ export default function App() {
             </View>
 
             <Text style={styles.hintText}>
-              Left side: brightness | Right side: volume | Hold: temporary 1x | Double tap left/right: -30s / +30s
+              Left side: brightness | Right side: volume | Hold: temporary 1x | Double tap left/right: -30s / +30s | center: play/pause
             </Text>
           </View>
 

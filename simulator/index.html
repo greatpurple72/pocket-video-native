@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pocket Video Simulator</title>
+    <link rel="stylesheet" href="./simulator.css" />
+  </head>
+  <body>
+    <main class="page">
+      <section class="panel">
+        <h1>Pocket Video Simulator</h1>
+        <p>
+          Open this page in Chrome, press <strong>F12</strong>, enable the device toolbar, and turn on
+          <strong>touch</strong>. The player below mirrors the fullscreen gesture layer so you can test drag, double tap,
+          hold, brightness, and volume on your computer.
+        </p>
+
+        <div class="toolbar">
+          <input
+            id="video-url"
+            type="text"
+            value="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
+            placeholder="Paste a direct MP4 URL here"
+          />
+          <button id="load-video" type="button">Load</button>
+          <button id="reload-sample" type="button">Sample</button>
+        </div>
+      </section>
+
+      <section class="phone-shell">
+        <div class="phone-header">
+          <span>Pocket Video</span>
+          <span id="status-text">Ready</span>
+        </div>
+
+        <div class="player-shell">
+          <video
+            id="video"
+            playsinline
+            webkit-playsinline
+            crossorigin="anonymous"
+            src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
+          ></video>
+          <div id="brightness-mask" class="brightness-mask"></div>
+          <div id="gesture-message" class="gesture-message hidden"></div>
+          <div id="gesture-layer" class="gesture-layer"></div>
+
+          <div id="controls" class="controls">
+            <div class="top-bar">
+              <button id="play-toggle" type="button">Pause</button>
+              <div class="title">Desktop touch simulator</div>
+            </div>
+
+            <div class="bottom-stack">
+              <div class="card progress-card">
+                <div class="time-row">
+                  <span id="current-time">00:00</span>
+                  <span id="duration-time">00:00 | -00:00</span>
+                </div>
+                <div id="timeline" class="timeline">
+                  <div class="timeline-track"></div>
+                  <div id="timeline-fill" class="timeline-fill"></div>
+                  <div id="timeline-thumb" class="timeline-thumb"></div>
+                </div>
+                <div class="hint">
+                  Left swipe: brightness | Right swipe: volume | Hold: temporary 1x | Double tap left/right:
+                  -30s / +30s | center: play/pause
+                </div>
+              </div>
+
+              <div class="card controls-card">
+                <div class="chip-row">
+                  <button data-action="seek" data-value="-60">-60s</button>
+                  <button data-action="seek" data-value="60">+60s</button>
+                  <button data-action="rate" data-value="1">1x</button>
+                  <button data-action="rate" data-value="1.5">1.5x</button>
+                  <button data-action="rate" data-value="2">2x</button>
+                  <button data-action="rate" data-value="3">3x</button>
+                  <button data-action="rate" data-value="6">6x</button>
+                  <button data-action="rate" data-value="8">8x</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="./simulator.js"></script>
+  </body>
+</html>
