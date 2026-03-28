@@ -37,7 +37,8 @@ const DEFAULT_URL = 'https://www.bilibili.com';
 const HOLD_DELAY_MS = 260;
 const DOUBLE_TAP_MS = 260;
 const GESTURE_MOVE_THRESHOLD = 4;
-const GESTURE_FULL_SCALE_DISTANCE = 140;
+const GESTURE_CANCEL_HOLD_THRESHOLD = 1;
+const GESTURE_FULL_SCALE_DISTANCE = 60;
 const HIGH_RATE_AUDIO_THRESHOLD = 2;
 const JUMP_STEP_SECONDS = 60;
 const DOUBLE_TAP_SEEK_SECONDS = 30;
@@ -214,6 +215,7 @@ export default function App() {
     startBrightness: 0.5,
     startVolume: 1,
     holdRestoreRate: 1,
+    holdBlocked: false,
     activeSide: 'left' as TapSide,
     lastTapAt: 0,
   });
@@ -266,6 +268,11 @@ export default function App() {
 
   const displayedNativeTime = nativeScrubTime ?? offlineTime;
   const nativeProgress = offlineDuration > 0 ? clamp(displayedNativeTime / offlineDuration, 0, 1) : 0;
+  const screen = Dimensions.get('window');
+  const isLandscape = screen.width > screen.height;
+  const overlayHorizontalInset = isLandscape ? 34 : 18;
+  const overlayTopInset = isLandscape ? 26 : 56;
+  const overlayBottomInset = isLandscape ? 22 : 28;
 
   useEffect(() => {
     AsyncStorage.getItem(STORAGE_KEY)
@@ -857,6 +864,7 @@ export default function App() {
     clearHoldTimer();
 
     gestureRef.current.holdTimer = setTimeout(() => {
+      if (gestureRef.current.holdBlocked) return;
       gestureRef.current.holdActive = true;
       gestureRef.current.holdRestoreRate = mode === 'web' ? baseRate : offlineRate;
       showGestureMessage('Hold 1x');
@@ -933,6 +941,7 @@ export default function App() {
 
   function updateEdgeValue(mode: 'web' | 'native', side: TapSide, deltaY: number) {
     const amount = clamp(-deltaY / GESTURE_FULL_SCALE_DISTANCE, -1, 1);
+    setShowControls(true);
 
     if (side === 'left') {
       const nextBrightness = gestureRef.current.startBrightness + amount;
@@ -1039,18 +1048,26 @@ export default function App() {
         onPanResponderGrant: (event) => {
           gestureRef.current.startBrightness = brightness;
           gestureRef.current.startVolume = webVolume;
+          gestureRef.current.holdActive = false;
           gestureRef.current.moved = false;
+          gestureRef.current.holdBlocked = false;
           gestureRef.current.activeSide = getTapSide(event.nativeEvent.pageX);
           startHold('web');
           clearTapTimer();
         },
         onPanResponderMove: (event, gesture) => {
+          const hasAnyMove =
+            Math.abs(gesture.dy) > GESTURE_CANCEL_HOLD_THRESHOLD || Math.abs(gesture.dx) > GESTURE_CANCEL_HOLD_THRESHOLD;
           const hasMoved =
             Math.abs(gesture.dy) > GESTURE_MOVE_THRESHOLD || Math.abs(gesture.dx) > GESTURE_MOVE_THRESHOLD;
 
+          if (hasAnyMove) {
+            gestureRef.current.holdBlocked = true;
+            clearHoldTimer();
+          }
+
           if (hasMoved) {
             gestureRef.current.moved = true;
-            clearHoldTimer();
           }
 
           if (!gestureRef.current.moved || gestureRef.current.holdActive) return;
@@ -1059,12 +1076,17 @@ export default function App() {
         onPanResponderRelease: (event) => {
           if (finishHold('web')) return;
           clearHoldTimer();
-          if (gestureRef.current.moved) return;
+          gestureRef.current.holdBlocked = false;
+          const wasMoved = gestureRef.current.moved;
+          gestureRef.current.moved = false;
+          if (wasMoved) return;
           handleTap(event.nativeEvent.pageX, 'web');
         },
         onPanResponderTerminate: () => {
           finishHold('web');
           clearHoldTimer();
+          gestureRef.current.holdBlocked = false;
+          gestureRef.current.moved = false;
         },
       }),
     [baseRate, brightness, offlineRate, selectedOnline?.id, webVolume]
@@ -1080,18 +1102,26 @@ export default function App() {
         onPanResponderGrant: (event) => {
           gestureRef.current.startBrightness = brightness;
           gestureRef.current.startVolume = offlineVolume;
+          gestureRef.current.holdActive = false;
           gestureRef.current.moved = false;
+          gestureRef.current.holdBlocked = false;
           gestureRef.current.activeSide = getTapSide(event.nativeEvent.pageX);
           startHold('native');
           clearTapTimer();
         },
         onPanResponderMove: (event, gesture) => {
+          const hasAnyMove =
+            Math.abs(gesture.dy) > GESTURE_CANCEL_HOLD_THRESHOLD || Math.abs(gesture.dx) > GESTURE_CANCEL_HOLD_THRESHOLD;
           const hasMoved =
             Math.abs(gesture.dy) > GESTURE_MOVE_THRESHOLD || Math.abs(gesture.dx) > GESTURE_MOVE_THRESHOLD;
 
+          if (hasAnyMove) {
+            gestureRef.current.holdBlocked = true;
+            clearHoldTimer();
+          }
+
           if (hasMoved) {
             gestureRef.current.moved = true;
-            clearHoldTimer();
           }
 
           if (!gestureRef.current.moved || gestureRef.current.holdActive) return;
@@ -1100,12 +1130,17 @@ export default function App() {
         onPanResponderRelease: (event) => {
           if (finishHold('native')) return;
           clearHoldTimer();
-          if (gestureRef.current.moved) return;
+          gestureRef.current.holdBlocked = false;
+          const wasMoved = gestureRef.current.moved;
+          gestureRef.current.moved = false;
+          if (wasMoved) return;
           handleTap(event.nativeEvent.pageX, 'native');
         },
         onPanResponderTerminate: () => {
           finishHold('native');
           clearHoldTimer();
+          gestureRef.current.holdBlocked = false;
+          gestureRef.current.moved = false;
         },
       }),
     [brightness, offlineRate, offlineVolume, offlinePlayer, webVolume]
@@ -1116,7 +1151,7 @@ export default function App() {
 
     return (
       <>
-        <View style={styles.overlayTop}>
+        <View style={[styles.overlayTop, { top: overlayTopInset, left: overlayHorizontalInset, right: overlayHorizontalInset }]}>
           <Pressable style={styles.overlayButton} onPress={closeOnline}>
             <Text style={styles.overlayButtonText}>Back</Text>
           </Pressable>
@@ -1125,7 +1160,16 @@ export default function App() {
           </Text>
         </View>
 
-        <View style={styles.overlayBottom}>
+        <View
+          style={[
+            styles.overlayBottom,
+            {
+              left: overlayHorizontalInset,
+              right: overlayHorizontalInset,
+              bottom: overlayBottomInset,
+            },
+          ]}
+        >
           <View style={styles.progressCard}>
             <View style={styles.progressHeader}>
               <Text style={styles.progressTime}>{formatTime(displayedWebTime)}</Text>
@@ -1207,7 +1251,7 @@ export default function App() {
 
     return (
       <>
-        <View style={styles.overlayTop}>
+        <View style={[styles.overlayTop, { top: overlayTopInset, left: overlayHorizontalInset, right: overlayHorizontalInset }]}>
           <Pressable style={styles.overlayButton} onPress={closeOffline}>
             <Text style={styles.overlayButtonText}>Back</Text>
           </Pressable>
@@ -1216,7 +1260,16 @@ export default function App() {
           </Text>
         </View>
 
-        <View style={styles.overlayBottom}>
+        <View
+          style={[
+            styles.overlayBottom,
+            {
+              left: overlayHorizontalInset,
+              right: overlayHorizontalInset,
+              bottom: overlayBottomInset,
+            },
+          ]}
+        >
           <View style={styles.progressCard}>
             <View style={styles.progressHeader}>
               <Text style={styles.progressTime}>{formatTime(displayedNativeTime)}</Text>
@@ -1700,10 +1753,13 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '700',
     fontSize: 13,
+    minWidth: 54,
   },
   progressMeta: {
     color: '#d9e2ec',
     fontSize: 12,
+    flexShrink: 1,
+    textAlign: 'right',
   },
   timelineTrackWrap: {
     height: 40,
