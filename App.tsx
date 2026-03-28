@@ -197,6 +197,8 @@ export default function App() {
     lastTapAt: 0,
   });
   const timelineRef = useRef({ web: 0, native: 0, webAnchorTime: 0, nativeAnchorTime: 0 });
+  const snapshotRef = useRef<PlayerSnapshot | null>(null);
+  const offlinePausedRef = useRef(true);
 
   const [addressInput, setAddressInput] = useState(DEFAULT_URL);
   const [currentUrl, setCurrentUrl] = useState(DEFAULT_URL);
@@ -267,6 +269,14 @@ export default function App() {
   useEffect(() => {
     AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(downloads)).catch(() => {});
   }, [downloads]);
+
+  useEffect(() => {
+    snapshotRef.current = snapshot;
+  }, [snapshot]);
+
+  useEffect(() => {
+    offlinePausedRef.current = offlinePaused;
+  }, [offlinePaused]);
 
   useEffect(() => {
     return () => {
@@ -499,14 +509,14 @@ export default function App() {
   }
 
   function toggleWebPlayPause() {
-    const nextPaused = !(snapshot?.paused ?? false);
+    const nextPaused = !(snapshotRef.current?.paused ?? false);
     setSnapshot((current) => (current ? { ...current, paused: nextPaused } : current));
     sendWebCommand({ action: 'togglePlay', id: selectedOnline?.id });
     return nextPaused;
   }
 
   function toggleNativePlayPause() {
-    const nextPaused = offlinePlayer.playing;
+    const nextPaused = !offlinePausedRef.current;
     if (offlinePlayer.playing) {
       offlinePlayer.pause();
     } else {
@@ -873,7 +883,9 @@ export default function App() {
         return;
       }
 
-      const nextPaused = mode === 'web' ? toggleWebPlayPause() : toggleNativePlayPause();
+      const nextPaused = mode === 'web' ? !Boolean(snapshotRef.current?.paused) : !offlinePausedRef.current;
+      if (mode === 'web') toggleWebPlayPause();
+      else toggleNativePlayPause();
       showGestureMessage(nextPaused ? 'Pause' : 'Play');
       return;
     }
@@ -883,7 +895,7 @@ export default function App() {
   }
 
   function updateEdgeValue(mode: 'web' | 'native', side: TapSide, deltaY: number) {
-    const amount = deltaY * -0.0048;
+    const amount = -deltaY / Math.max(Dimensions.get('window').height * 0.35, 1);
 
     if (side === 'left') {
       const nextBrightness = gestureRef.current.startBrightness + amount;
@@ -903,6 +915,48 @@ export default function App() {
 
     setOfflineVolume(nextVolume);
     offlinePlayer.volume = nextVolume;
+  }
+
+  function beginTimelineScrub(mode: 'web' | 'native') {
+    setShowControls(true);
+    if (mode === 'web') {
+      timelineRef.current.web = displayedWebTime;
+      setWebScrubTime(displayedWebTime);
+      return;
+    }
+
+    timelineRef.current.native = displayedNativeTime;
+    setNativeScrubTime(displayedNativeTime);
+  }
+
+  function updateTimelineScrub(mode: 'web' | 'native', locationX: number) {
+    if (mode === 'web') {
+      if (webDuration <= 0 || webTimelineWidth <= 0) return;
+      const value = getTimelineValue(locationX, webTimelineWidth, webDuration);
+      timelineRef.current.web = value;
+      setWebScrubTime(value);
+      return;
+    }
+
+    if (offlineDuration <= 0 || nativeTimelineWidth <= 0) return;
+    const value = getTimelineValue(locationX, nativeTimelineWidth, offlineDuration);
+    timelineRef.current.native = value;
+    setNativeScrubTime(value);
+  }
+
+  function finishTimelineScrub(mode: 'web' | 'native', locationX?: number) {
+    if (typeof locationX === 'number') {
+      updateTimelineScrub(mode, locationX);
+    }
+
+    if (mode === 'web') {
+      seekWebTo(timelineRef.current.web);
+      setWebScrubTime(null);
+      return;
+    }
+
+    seekNativeTo(timelineRef.current.native);
+    setNativeScrubTime(null);
   }
 
   const webGestures = useMemo(
@@ -987,68 +1041,6 @@ export default function App() {
     [brightness, offlineRate, offlineVolume, offlinePlayer, webVolume]
   );
 
-  const webTimelineResponder = useMemo(
-    () =>
-      PanResponder.create({
-        onStartShouldSetPanResponder: () => webDuration > 0,
-        onMoveShouldSetPanResponder: () => webDuration > 0,
-        onPanResponderGrant: () => {
-          timelineRef.current.web = displayedWebTime;
-          timelineRef.current.webAnchorTime = displayedWebTime;
-          setShowControls(true);
-          setWebScrubTime(displayedWebTime);
-        },
-        onPanResponderMove: (_event, gesture) => {
-          const value = clamp(
-            timelineRef.current.webAnchorTime + (gesture.dx / Math.max(webTimelineWidth, 1)) * webDuration,
-            0,
-            webDuration
-          );
-          timelineRef.current.web = value;
-          setWebScrubTime(value);
-        },
-        onPanResponderRelease: () => {
-          seekWebTo(timelineRef.current.web);
-          setWebScrubTime(null);
-        },
-        onPanResponderTerminate: () => {
-          setWebScrubTime(null);
-        },
-      }),
-    [displayedWebTime, selectedOnline?.id, webDuration, webTimelineWidth]
-  );
-
-  const nativeTimelineResponder = useMemo(
-    () =>
-      PanResponder.create({
-        onStartShouldSetPanResponder: () => offlineDuration > 0,
-        onMoveShouldSetPanResponder: () => offlineDuration > 0,
-        onPanResponderGrant: () => {
-          timelineRef.current.native = displayedNativeTime;
-          timelineRef.current.nativeAnchorTime = displayedNativeTime;
-          setShowControls(true);
-          setNativeScrubTime(displayedNativeTime);
-        },
-        onPanResponderMove: (_event, gesture) => {
-          const value = clamp(
-            timelineRef.current.nativeAnchorTime + (gesture.dx / Math.max(nativeTimelineWidth, 1)) * offlineDuration,
-            0,
-            offlineDuration
-          );
-          timelineRef.current.native = value;
-          setNativeScrubTime(value);
-        },
-        onPanResponderRelease: () => {
-          seekNativeTo(timelineRef.current.native);
-          setNativeScrubTime(null);
-        },
-        onPanResponderTerminate: () => {
-          setNativeScrubTime(null);
-        },
-      }),
-    [displayedNativeTime, nativeTimelineWidth, offlineDuration]
-  );
-
   function renderWebControls() {
     if (!showControls) return null;
 
@@ -1075,7 +1067,21 @@ export default function App() {
             <View
               style={styles.timelineTrackWrap}
               onLayout={(event) => setWebTimelineWidth(event.nativeEvent.layout.width)}
-              {...webTimelineResponder.panHandlers}
+              onStartShouldSetResponder={() => webDuration > 0}
+              onMoveShouldSetResponder={() => webDuration > 0}
+              onResponderGrant={(event) => {
+                beginTimelineScrub('web');
+                updateTimelineScrub('web', event.nativeEvent.locationX);
+              }}
+              onResponderMove={(event) => {
+                updateTimelineScrub('web', event.nativeEvent.locationX);
+              }}
+              onResponderRelease={(event) => {
+                finishTimelineScrub('web', event.nativeEvent.locationX);
+              }}
+              onResponderTerminate={() => {
+                setWebScrubTime(null);
+              }}
             >
               <View style={styles.timelineTrack} />
               <View style={[styles.timelineFill, { width: `${webProgress * 100}%` }]} />
@@ -1151,7 +1157,21 @@ export default function App() {
             <View
               style={styles.timelineTrackWrap}
               onLayout={(event) => setNativeTimelineWidth(event.nativeEvent.layout.width)}
-              {...nativeTimelineResponder.panHandlers}
+              onStartShouldSetResponder={() => offlineDuration > 0}
+              onMoveShouldSetResponder={() => offlineDuration > 0}
+              onResponderGrant={(event) => {
+                beginTimelineScrub('native');
+                updateTimelineScrub('native', event.nativeEvent.locationX);
+              }}
+              onResponderMove={(event) => {
+                updateTimelineScrub('native', event.nativeEvent.locationX);
+              }}
+              onResponderRelease={(event) => {
+                finishTimelineScrub('native', event.nativeEvent.locationX);
+              }}
+              onResponderTerminate={() => {
+                setNativeScrubTime(null);
+              }}
             >
               <View style={styles.timelineTrack} />
               <View style={[styles.timelineFill, { width: `${nativeProgress * 100}%` }]} />
