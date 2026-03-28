@@ -36,10 +36,12 @@ const STORAGE_KEY = 'codex-video-browser-downloads';
 const DEFAULT_URL = 'https://www.bilibili.com';
 const HOLD_DELAY_MS = 260;
 const DOUBLE_TAP_MS = 260;
-const GESTURE_MOVE_THRESHOLD = 10;
+const GESTURE_MOVE_THRESHOLD = 4;
+const GESTURE_FULL_SCALE_DISTANCE = 140;
+const HIGH_RATE_AUDIO_THRESHOLD = 2;
 const JUMP_STEP_SECONDS = 60;
 const DOUBLE_TAP_SEEK_SECONDS = 30;
-const REGULAR_SPEEDS = [1, 1.5, 2, 3, 6, 8];
+const REGULAR_SPEEDS = [1, 2, 3, 4, 6, 8];
 const SAFE_NAVIGATION_PATTERN = /^(https?:|about:blank|blob:|data:|javascript:)/i;
 const MOBILE_USER_AGENT =
   'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1';
@@ -50,6 +52,7 @@ type PlaybackTarget = {
   mode: 'stream' | 'download';
   candidate?: VideoCandidate | null;
   contentType?: 'auto' | 'hls';
+  headers?: Record<string, string>;
 };
 
 type TapSide = 'left' | 'right';
@@ -97,6 +100,22 @@ function guessResourceExtension(url: string) {
 function getTimelineValue(locationX: number, width: number, duration: number) {
   if (width <= 0 || duration <= 0) return 0;
   return clamp(locationX / width, 0, 1) * duration;
+}
+
+function shouldPreservePitch(rate: number) {
+  return rate <= HIGH_RATE_AUDIO_THRESHOLD;
+}
+
+function buildMediaHeaders(pageUrl: string) {
+  try {
+    return {
+      Referer: pageUrl,
+      Origin: new URL(pageUrl).origin,
+      'User-Agent': MOBILE_USER_AGENT,
+    };
+  } catch (error) {
+    return undefined;
+  }
 }
 
 function formatRemainingTime(currentTime: number, duration: number) {
@@ -184,6 +203,8 @@ function rewriteMediaPlaylist(text: string, baseUrl: string) {
 
 export default function App() {
   const webViewRef = useRef<WebView>(null);
+  const webTimelineRef = useRef<View | null>(null);
+  const nativeTimelineRef = useRef<View | null>(null);
   const gestureRef = useRef({
     holdTimer: null as ReturnType<typeof setTimeout> | null,
     tapTimer: null as ReturnType<typeof setTimeout> | null,
@@ -197,6 +218,10 @@ export default function App() {
     lastTapAt: 0,
   });
   const timelineRef = useRef({ web: 0, native: 0, webAnchorTime: 0, nativeAnchorTime: 0 });
+  const timelineBoundsRef = useRef({
+    web: { x: 0, width: 0 },
+    native: { x: 0, width: 0 },
+  });
   const snapshotRef = useRef<PlayerSnapshot | null>(null);
   const offlinePausedRef = useRef(true);
 
@@ -295,14 +320,18 @@ export default function App() {
     const load = async () => {
       try {
         await offlinePlayer.replaceAsync(
-          currentPlayback.contentType && currentPlayback.contentType !== 'auto'
-            ? { uri: currentPlayback.sourceUri, contentType: currentPlayback.contentType }
+          currentPlayback.headers || currentPlayback.contentType
+            ? {
+                uri: currentPlayback.sourceUri,
+                contentType: currentPlayback.contentType || 'auto',
+                headers: currentPlayback.headers,
+              }
             : currentPlayback.sourceUri
         );
         if (!alive) return;
 
         offlinePlayer.volume = offlineVolume;
-        offlinePlayer.preservesPitch = true;
+        offlinePlayer.preservesPitch = shouldPreservePitch(offlineRate);
         offlinePlayer.playbackRate = offlineRate;
         offlinePlayer.play();
         setOfflinePaused(false);
@@ -357,7 +386,7 @@ export default function App() {
 
   useEffect(() => {
     if (!selectedPlayback || gestureRef.current.holdActive) return;
-    offlinePlayer.preservesPitch = true;
+    offlinePlayer.preservesPitch = shouldPreservePitch(offlineRate);
     offlinePlayer.playbackRate = offlineRate;
   }, [offlinePlayer, offlineRate, selectedPlayback]);
 
@@ -467,6 +496,9 @@ export default function App() {
     setShowControls(true);
 
     if (video.kind === 'native-stream') {
+      setSelectedOnline(null);
+      setWebFullscreen(false);
+      setNativeScrubTime(null);
       setOfflineRate(baseRate);
       setSelectedPlayback({
         title: video.title || pageTitle || 'Stream video',
@@ -474,6 +506,7 @@ export default function App() {
         mode: 'stream',
         candidate: video,
         contentType: isHlsUrl(video.url) ? 'hls' : 'auto',
+        headers: buildMediaHeaders(currentUrl),
       });
       return;
     }
@@ -510,6 +543,7 @@ export default function App() {
 
   function toggleWebPlayPause() {
     const nextPaused = !(snapshotRef.current?.paused ?? false);
+    snapshotRef.current = snapshotRef.current ? { ...snapshotRef.current, paused: nextPaused } : snapshotRef.current;
     setSnapshot((current) => (current ? { ...current, paused: nextPaused } : current));
     sendWebCommand({ action: 'togglePlay', id: selectedOnline?.id });
     return nextPaused;
@@ -522,6 +556,7 @@ export default function App() {
     } else {
       offlinePlayer.play();
     }
+    offlinePausedRef.current = nextPaused;
     setOfflinePaused(nextPaused);
     return nextPaused;
   }
@@ -551,6 +586,7 @@ export default function App() {
 
   function applyNativeRate(rate: number) {
     setOfflineRate(rate);
+    offlinePlayer.preservesPitch = shouldPreservePitch(rate);
     offlinePlayer.playbackRate = rate;
   }
 
@@ -578,6 +614,7 @@ export default function App() {
         kind: 'native-stream',
       },
       contentType: isHlsUrl(item.remoteUrl) ? 'hls' : 'auto',
+      headers: buildMediaHeaders(item.sourcePage),
     });
   }
 
@@ -827,6 +864,7 @@ export default function App() {
       if (mode === 'web') {
         sendWebCommand({ action: 'setRate', id: selectedOnline?.id, value: 1 });
       } else {
+        offlinePlayer.preservesPitch = true;
         offlinePlayer.playbackRate = 1;
       }
     }, HOLD_DELAY_MS);
@@ -843,6 +881,7 @@ export default function App() {
     if (mode === 'web') {
       sendWebCommand({ action: 'setRate', id: selectedOnline?.id, value: restoreRate });
     } else {
+      offlinePlayer.preservesPitch = shouldPreservePitch(restoreRate);
       offlinePlayer.playbackRate = restoreRate;
       setOfflineRate(restoreRate);
     }
@@ -883,9 +922,7 @@ export default function App() {
         return;
       }
 
-      const nextPaused = mode === 'web' ? !Boolean(snapshotRef.current?.paused) : !offlinePausedRef.current;
-      if (mode === 'web') toggleWebPlayPause();
-      else toggleNativePlayPause();
+      const nextPaused = mode === 'web' ? toggleWebPlayPause() : toggleNativePlayPause();
       showGestureMessage(nextPaused ? 'Pause' : 'Play');
       return;
     }
@@ -895,7 +932,7 @@ export default function App() {
   }
 
   function updateEdgeValue(mode: 'web' | 'native', side: TapSide, deltaY: number) {
-    const amount = -deltaY / Math.max(Dimensions.get('window').height * 0.35, 1);
+    const amount = clamp(-deltaY / GESTURE_FULL_SCALE_DISTANCE, -1, 1);
 
     if (side === 'left') {
       const nextBrightness = gestureRef.current.startBrightness + amount;
@@ -917,8 +954,39 @@ export default function App() {
     offlinePlayer.volume = nextVolume;
   }
 
+  function refreshTimelineBounds(mode: 'web' | 'native', fallbackWidth?: number) {
+    const targetRef = mode === 'web' ? webTimelineRef.current : nativeTimelineRef.current;
+    if (!targetRef?.measureInWindow) {
+      if (typeof fallbackWidth === 'number' && fallbackWidth > 0) {
+        if (mode === 'web') setWebTimelineWidth(fallbackWidth);
+        else setNativeTimelineWidth(fallbackWidth);
+      }
+      return;
+    }
+
+    requestAnimationFrame(() => {
+      targetRef.measureInWindow((x, _y, width) => {
+        const nextWidth = width > 0 ? width : fallbackWidth || 0;
+        if (nextWidth <= 0) return;
+        timelineBoundsRef.current[mode] = { x, width: nextWidth };
+        if (mode === 'web') setWebTimelineWidth(nextWidth);
+        else setNativeTimelineWidth(nextWidth);
+      });
+    });
+  }
+
+  function resolveTimelineTouchX(mode: 'web' | 'native', pageX: number, locationX?: number) {
+    const bounds = timelineBoundsRef.current[mode];
+    if (bounds.width > 0) {
+      return pageX - bounds.x;
+    }
+
+    return locationX ?? 0;
+  }
+
   function beginTimelineScrub(mode: 'web' | 'native') {
     setShowControls(true);
+    refreshTimelineBounds(mode);
     if (mode === 'web') {
       timelineRef.current.web = displayedWebTime;
       setWebScrubTime(displayedWebTime);
@@ -929,24 +997,26 @@ export default function App() {
     setNativeScrubTime(displayedNativeTime);
   }
 
-  function updateTimelineScrub(mode: 'web' | 'native', locationX: number) {
+  function updateTimelineScrub(mode: 'web' | 'native', pageX: number, locationX?: number) {
     if (mode === 'web') {
-      if (webDuration <= 0 || webTimelineWidth <= 0) return;
-      const value = getTimelineValue(locationX, webTimelineWidth, webDuration);
+      const width = timelineBoundsRef.current.web.width || webTimelineWidth;
+      if (webDuration <= 0 || width <= 0) return;
+      const value = getTimelineValue(resolveTimelineTouchX('web', pageX, locationX), width, webDuration);
       timelineRef.current.web = value;
       setWebScrubTime(value);
       return;
     }
 
-    if (offlineDuration <= 0 || nativeTimelineWidth <= 0) return;
-    const value = getTimelineValue(locationX, nativeTimelineWidth, offlineDuration);
+    const width = timelineBoundsRef.current.native.width || nativeTimelineWidth;
+    if (offlineDuration <= 0 || width <= 0) return;
+    const value = getTimelineValue(resolveTimelineTouchX('native', pageX, locationX), width, offlineDuration);
     timelineRef.current.native = value;
     setNativeScrubTime(value);
   }
 
-  function finishTimelineScrub(mode: 'web' | 'native', locationX?: number) {
-    if (typeof locationX === 'number') {
-      updateTimelineScrub(mode, locationX);
+  function finishTimelineScrub(mode: 'web' | 'native', pageX?: number, locationX?: number) {
+    if (typeof pageX === 'number') {
+      updateTimelineScrub(mode, pageX, locationX);
     }
 
     if (mode === 'web') {
@@ -1065,27 +1135,28 @@ export default function App() {
             </View>
 
             <View
+              ref={webTimelineRef}
               style={styles.timelineTrackWrap}
-              onLayout={(event) => setWebTimelineWidth(event.nativeEvent.layout.width)}
+              onLayout={(event) => refreshTimelineBounds('web', event.nativeEvent.layout.width)}
               onStartShouldSetResponder={() => webDuration > 0}
               onMoveShouldSetResponder={() => webDuration > 0}
               onResponderGrant={(event) => {
                 beginTimelineScrub('web');
-                updateTimelineScrub('web', event.nativeEvent.locationX);
+                updateTimelineScrub('web', event.nativeEvent.pageX, event.nativeEvent.locationX);
               }}
               onResponderMove={(event) => {
-                updateTimelineScrub('web', event.nativeEvent.locationX);
+                updateTimelineScrub('web', event.nativeEvent.pageX, event.nativeEvent.locationX);
               }}
               onResponderRelease={(event) => {
-                finishTimelineScrub('web', event.nativeEvent.locationX);
+                finishTimelineScrub('web', event.nativeEvent.pageX, event.nativeEvent.locationX);
               }}
               onResponderTerminate={() => {
                 setWebScrubTime(null);
               }}
             >
-              <View style={styles.timelineTrack} />
-              <View style={[styles.timelineFill, { width: `${webProgress * 100}%` }]} />
-              <View style={[styles.timelineThumb, { left: `${webProgress * 100}%` }]} />
+              <View pointerEvents="none" style={styles.timelineTrack} />
+              <View pointerEvents="none" style={[styles.timelineFill, { width: `${webProgress * 100}%` }]} />
+              <View pointerEvents="none" style={[styles.timelineThumb, { left: `${webProgress * 100}%` }]} />
             </View>
 
             <Text style={styles.hintText}>
@@ -1155,27 +1226,28 @@ export default function App() {
             </View>
 
             <View
+              ref={nativeTimelineRef}
               style={styles.timelineTrackWrap}
-              onLayout={(event) => setNativeTimelineWidth(event.nativeEvent.layout.width)}
+              onLayout={(event) => refreshTimelineBounds('native', event.nativeEvent.layout.width)}
               onStartShouldSetResponder={() => offlineDuration > 0}
               onMoveShouldSetResponder={() => offlineDuration > 0}
               onResponderGrant={(event) => {
                 beginTimelineScrub('native');
-                updateTimelineScrub('native', event.nativeEvent.locationX);
+                updateTimelineScrub('native', event.nativeEvent.pageX, event.nativeEvent.locationX);
               }}
               onResponderMove={(event) => {
-                updateTimelineScrub('native', event.nativeEvent.locationX);
+                updateTimelineScrub('native', event.nativeEvent.pageX, event.nativeEvent.locationX);
               }}
               onResponderRelease={(event) => {
-                finishTimelineScrub('native', event.nativeEvent.locationX);
+                finishTimelineScrub('native', event.nativeEvent.pageX, event.nativeEvent.locationX);
               }}
               onResponderTerminate={() => {
                 setNativeScrubTime(null);
               }}
             >
-              <View style={styles.timelineTrack} />
-              <View style={[styles.timelineFill, { width: `${nativeProgress * 100}%` }]} />
-              <View style={[styles.timelineThumb, { left: `${nativeProgress * 100}%` }]} />
+              <View pointerEvents="none" style={styles.timelineTrack} />
+              <View pointerEvents="none" style={[styles.timelineFill, { width: `${nativeProgress * 100}%` }]} />
+              <View pointerEvents="none" style={[styles.timelineThumb, { left: `${nativeProgress * 100}%` }]} />
             </View>
 
             <Text style={styles.hintText}>
@@ -1636,6 +1708,7 @@ const styles = StyleSheet.create({
   timelineTrackWrap: {
     height: 40,
     justifyContent: 'center',
+    overflow: 'visible',
   },
   timelineTrack: {
     height: 8,
@@ -1651,13 +1724,13 @@ const styles = StyleSheet.create({
   },
   timelineThumb: {
     position: 'absolute',
-    marginLeft: -12,
     width: 24,
     height: 24,
     borderRadius: 12,
     backgroundColor: '#fff',
     borderWidth: 4,
     borderColor: '#f0b429',
+    transform: [{ translateX: -12 }],
   },
   hintText: {
     color: '#d9e2ec',

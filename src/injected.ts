@@ -40,13 +40,16 @@ export const injectedJavaScript = `
     return 0;
   };
 
+  const shouldPreservePitch = (rate) => Number(rate || 1) <= 2;
+
   const safePlay = (video) => {
     try {
+      const preservePitch = shouldPreservePitch(video && video.playbackRate);
       if ('preservesPitch' in video) {
-        video.preservesPitch = true;
+        video.preservesPitch = preservePitch;
       }
       if ('webkitPreservesPitch' in video) {
-        video.webkitPreservesPitch = true;
+        video.webkitPreservesPitch = preservePitch;
       }
       const result = video && video.play ? video.play() : null;
       if (result && typeof result.catch === 'function') {
@@ -179,6 +182,7 @@ export const injectedJavaScript = `
 
   const dedupeCandidates = (items) => {
     const byUrl = {};
+    const priority = (item) => item.kind === 'native-stream' ? 2 : 1;
 
     items.forEach((item) => {
       if (!item.url) return;
@@ -188,12 +192,14 @@ export const injectedJavaScript = `
         return;
       }
 
-      if (byUrl[key].kind !== 'html5-video' && item.kind === 'html5-video') {
+      if (priority(item) > priority(byUrl[key])) {
         byUrl[key] = item;
       }
     });
 
-    return Object.keys(byUrl).map((key) => byUrl[key]);
+    return Object.keys(byUrl)
+      .map((key) => byUrl[key])
+      .sort((left, right) => priority(right) - priority(left));
   };
 
   const getVideos = () => {
@@ -306,10 +312,10 @@ export const injectedJavaScript = `
     if (command.action === 'togglePlay') video.paused ? safePlay(video) : video.pause && video.pause();
     if (command.action === 'setRate') {
       if ('preservesPitch' in video) {
-        video.preservesPitch = true;
+        video.preservesPitch = shouldPreservePitch(command.value);
       }
       if ('webkitPreservesPitch' in video) {
-        video.webkitPreservesPitch = true;
+        video.webkitPreservesPitch = shouldPreservePitch(command.value);
       }
       video.playbackRate = Number(command.value || 1);
     }
