@@ -24,13 +24,29 @@ export const injectedJavaScript = `
   const send = (payload) => window.ReactNativeWebView && window.ReactNativeWebView.postMessage(JSON.stringify(payload));
   const allowedNavigationPattern = /^(https?:|about:blank|blob:|data:|javascript:)/i;
 
+  const getPlayableDuration = (video) => {
+    if (!video) return 0;
+    if (Number.isFinite(video.duration) && video.duration > 0) {
+      return Number(video.duration);
+    }
+    try {
+      if (video.seekable && video.seekable.length > 0) {
+        const seekableEnd = Number(video.seekable.end(video.seekable.length - 1));
+        if (Number.isFinite(seekableEnd) && seekableEnd > 0) {
+          return seekableEnd;
+        }
+      }
+    } catch (error) {}
+    return 0;
+  };
+
   const safePlay = (video) => {
     try {
       if ('preservesPitch' in video) {
-        video.preservesPitch = false;
+        video.preservesPitch = true;
       }
       if ('webkitPreservesPitch' in video) {
-        video.webkitPreservesPitch = false;
+        video.webkitPreservesPitch = true;
       }
       const result = video && video.play ? video.play() : null;
       if (result && typeof result.catch === 'function') {
@@ -199,7 +215,7 @@ export const injectedJavaScript = `
         url: video.currentSrc || video.src || '',
         title: guessTitle(video, video.ownerDocument || document),
         currentTime: Number(video.currentTime || 0),
-        duration: Number(isFinite(video.duration) ? video.duration : 0),
+        duration: getPlayableDuration(video),
         paused: !!video.paused,
         volume: typeof video.volume === 'number' ? video.volume : 1,
         playbackRate: typeof video.playbackRate === 'number' ? video.playbackRate : 1,
@@ -290,10 +306,10 @@ export const injectedJavaScript = `
     if (command.action === 'togglePlay') video.paused ? safePlay(video) : video.pause && video.pause();
     if (command.action === 'setRate') {
       if ('preservesPitch' in video) {
-        video.preservesPitch = false;
+        video.preservesPitch = true;
       }
       if ('webkitPreservesPitch' in video) {
-        video.webkitPreservesPitch = false;
+        video.webkitPreservesPitch = true;
       }
       video.playbackRate = Number(command.value || 1);
     }

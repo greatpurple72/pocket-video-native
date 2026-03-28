@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pocket Video Desktop Simulator</title>
+    <link rel="stylesheet" href="./renderer.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="phone-shell">
+        <div class="header">
+          <div class="brand-row">
+            <h1>Pocket Video</h1>
+            <div id="status-text" class="status-pill">Ready</div>
+          </div>
+          <div class="address-row">
+            <button id="go-back" type="button" class="nav-button">&lt;</button>
+            <button id="go-forward" type="button" class="nav-button">&gt;</button>
+            <input id="address-input" type="text" value="https://www.baidu.com" />
+            <button id="go-button" type="button" class="go-button">Go</button>
+          </div>
+        </div>
+
+        <div id="player-shell" class="player-shell">
+          <webview id="browser-view" src="https://www.baidu.com" partition="persist:pocket-video-desktop" allowpopups="false"></webview>
+
+          <div id="native-player-layer" class="native-player-layer hidden">
+            <video id="native-player" playsinline webkit-playsinline crossorigin="anonymous"></video>
+          </div>
+
+          <div id="brightness-mask" class="brightness-mask"></div>
+          <div id="gesture-message" class="gesture-message hidden"></div>
+          <div id="gesture-layer" class="gesture-layer hidden"></div>
+
+          <div id="fullscreen-controls" class="fullscreen-controls hidden">
+            <div class="top-bar">
+              <button id="close-fullscreen" type="button">Back</button>
+              <div id="fullscreen-title" class="fullscreen-title">Fullscreen video</div>
+            </div>
+
+            <div class="bottom-stack">
+              <div class="card">
+                <div class="time-row">
+                  <span id="current-time">00:00</span>
+                  <span id="duration-time">00:00 | -00:00</span>
+                </div>
+                <div id="timeline" class="timeline">
+                  <div class="timeline-track"></div>
+                  <div id="timeline-fill" class="timeline-fill"></div>
+                  <div id="timeline-thumb" class="timeline-thumb"></div>
+                  <input id="timeline-input" class="timeline-input" type="range" min="0" max="1000" step="1" value="0" />
+                </div>
+                <div class="hint">
+                  Left: brightness | Right: volume | Hold: temporary 1x | Double tap left/right: -30s / +30s | center:
+                  play/pause
+                </div>
+              </div>
+
+              <div class="card">
+                <div id="chip-row" class="chip-row">
+                  <button id="play-toggle" type="button">Pause</button>
+                  <button data-action="seek" data-value="-60" type="button">-60s</button>
+                  <button data-action="seek" data-value="60" type="button">+60s</button>
+                  <button data-action="rate" data-value="1" type="button">1x</button>
+                  <button data-action="rate" data-value="1.5" type="button">1.5x</button>
+                  <button data-action="rate" data-value="2" type="button">2x</button>
+                  <button data-action="rate" data-value="3" type="button">3x</button>
+                  <button data-action="rate" data-value="6" type="button">6x</button>
+                  <button data-action="rate" data-value="8" type="button">8x</button>
+                  <button id="download-current" type="button" class="download-chip">Save offline</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="lists">
+          <section class="panel">
+            <h2>Detected videos</h2>
+            <div id="detected-list" class="stack"></div>
+          </section>
+          <section class="panel">
+            <h2>Offline library</h2>
+            <div id="download-list" class="stack"></div>
+          </section>
+        </div>
+      </section>
+
+      <aside class="help-panel">
+        <h2>Desktop simulator</h2>
+        <p>
+          This desktop version opens real pages, blocks popup windows, detects page videos, supports fullscreen overlay
+          gestures, and keeps an offline list. Mouse drag acts as touch drag, so you can test the full interaction flow
+          before installing to your phone.
+        </p>
+        <ul>
+          <li>Single click toggles controls.</li>
+          <li>Double click left and right seek 30 seconds.</li>
+          <li>Double click center toggles play and pause.</li>
+          <li>Hold to force temporary 1x playback.</li>
+          <li>Left drag changes brightness overlay, right drag changes volume.</li>
+        </ul>
+      </aside>
+    </main>
+
+    <script src="./renderer.js"></script>
+  </body>
+</html>

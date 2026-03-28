@@ -230,7 +230,7 @@ export default function App() {
     player.volume = 1;
     player.playbackRate = 1;
     player.loop = false;
-    player.preservesPitch = false;
+    player.preservesPitch = true;
   });
 
   const webDuration = snapshot?.duration || 0;
@@ -292,7 +292,7 @@ export default function App() {
         if (!alive) return;
 
         offlinePlayer.volume = offlineVolume;
-        offlinePlayer.preservesPitch = false;
+        offlinePlayer.preservesPitch = true;
         offlinePlayer.playbackRate = offlineRate;
         offlinePlayer.play();
         setOfflinePaused(false);
@@ -347,7 +347,7 @@ export default function App() {
 
   useEffect(() => {
     if (!selectedPlayback || gestureRef.current.holdActive) return;
-    offlinePlayer.preservesPitch = false;
+    offlinePlayer.preservesPitch = true;
     offlinePlayer.playbackRate = offlineRate;
   }, [offlinePlayer, offlineRate, selectedPlayback]);
 
@@ -357,7 +357,7 @@ export default function App() {
     const isPlaying = selectedPlayback ? !offlinePaused : !snapshot?.paused;
     if (!isPlaying) return;
 
-    const timer = setTimeout(() => setShowControls(false), 1000);
+    const timer = setTimeout(() => setShowControls(false), 2000);
     return () => clearTimeout(timer);
   }, [nativeScrubTime, offlinePaused, selectedPlayback, showControls, snapshot?.paused, webFullscreen, webScrubTime]);
 
@@ -499,15 +499,21 @@ export default function App() {
   }
 
   function toggleWebPlayPause() {
+    const nextPaused = !(snapshot?.paused ?? false);
+    setSnapshot((current) => (current ? { ...current, paused: nextPaused } : current));
     sendWebCommand({ action: 'togglePlay', id: selectedOnline?.id });
+    return nextPaused;
   }
 
   function toggleNativePlayPause() {
+    const nextPaused = offlinePlayer.playing;
     if (offlinePlayer.playing) {
       offlinePlayer.pause();
     } else {
       offlinePlayer.play();
     }
+    setOfflinePaused(nextPaused);
+    return nextPaused;
   }
 
   function seekWebBy(seconds: number) {
@@ -856,17 +862,19 @@ export default function App() {
       if (action === 'seek-backward') {
         if (mode === 'web') seekWebBy(-DOUBLE_TAP_SEEK_SECONDS);
         else seekNativeBy(-DOUBLE_TAP_SEEK_SECONDS);
+        showGestureMessage(`-${DOUBLE_TAP_SEEK_SECONDS}s`);
         return;
       }
 
       if (action === 'seek-forward') {
         if (mode === 'web') seekWebBy(DOUBLE_TAP_SEEK_SECONDS);
         else seekNativeBy(DOUBLE_TAP_SEEK_SECONDS);
+        showGestureMessage(`+${DOUBLE_TAP_SEEK_SECONDS}s`);
         return;
       }
 
-      if (mode === 'web') toggleWebPlayPause();
-      else toggleNativePlayPause();
+      const nextPaused = mode === 'web' ? toggleWebPlayPause() : toggleNativePlayPause();
+      showGestureMessage(nextPaused ? 'Pause' : 'Play');
       return;
     }
 
