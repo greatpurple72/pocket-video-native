@@ -25,7 +25,8 @@ jobs:
       - name: Assemble site
         run: |
           mkdir -p _site
-          cp docs/design/match/previz/feel-prototype.html _site/index.html
+          cp docs/design/match/previz/feel-3d.html _site/index.html
+          cp docs/design/match/previz/feel-prototype.html _site/feel2d.html || true
           cp docs/design/match/control-layout.svg _site/control-layout.svg || true
           cp docs/design/art/previz/style-board.svg _site/style-board.svg || true
           cp docs/design/slg/economy/economy-loop.svg _site/economy-loop.svg || true
