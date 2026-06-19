@@ -9,16 +9,15 @@
 ---
 
 ## 1. 仓库与环境
-- ✅ 设计/文档仓库(本仓库)已建立,含调研、计划、上下文架构。
-- ⬜ 独立 UE5 工程仓库:**尚未创建**(待用户本地创建,见 `docs/ue-project/SETUP.md`)。
-- 环境:云端会话无 UE/GPU;UE 实际开发在用户本地。
+- ✅ 设计/文档仓库(本仓库)已建立,含调研、计划、上下文架构、概念图。
+- 🚧 UE5 工程:**Phase 0 起步代码已写**(`game/FootballSLG/`,C++:MatchBall/Footballer/MatchGameMode + 配置 + LFS + 构建说明)。待本地编译 + 建关卡 + 体感验收;建议迁入独立仓库。
+- 环境:云端会话无 UE/GPU;UE 编译运行在用户本地。
 
 ## 2. 比赛层(MatchLayer)
-- ⬜ UE5 工程骨架
-- ✅ 球物理 + 带球手感 — **PrevizGate 设计已批准**(2026-06-19);手机可玩 previz:`feel-prototype.html`。引擎内手感验收待 UE 灰盒。
-- ⬜ 传球 / 射门
-- ⬜ 队友/对手比赛 AI
-- ⬜ 比赛流程与规则
+- 🚧 UE5 工程骨架 — 起步代码已写(`game/FootballSLG/`),待本地编译
+- 🚧 球物理 + 带球手感 — 设计批准;**C++ 已实现**(MatchBall/Footballer),待引擎内体感验收+调参
+- 🚧 射门 — C++ 已实现(Shoot 冲量起弧),待验收
+- ⬜ 传球 / 队友·对手 AI / 比赛流程与规则(Phase 1)
 
 ## 3. 元层(MetaLayer / SLG)
 - ⬜ 俱乐部基地
