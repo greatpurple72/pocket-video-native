@@ -13,19 +13,18 @@ MODEL = os.environ.get("FAL_MODEL", "fal-ai/flux/dev")
 ENDPOINT = f"https://fal.run/{MODEL}"
 OUT = pathlib.Path("docs/design/art/generated"); OUT.mkdir(parents=True, exist_ok=True)
 
-PREFIX = ("in-game screenshot of a next-gen AAA football video game, EA Sports FC / eFootball "
-          "style, photorealistic 3D rendering, Unreal Engine 5, ray tracing, photoreal stadium "
-          "and grass, detailed realistic kits, skin and faces, athletic adult male footballers "
-          "with realistic body proportions (about 5.5 heads tall, mature and serious, NOT chibi, "
-          "NOT cartoon, NOT cute), subtle motion blur, broadcast TV camera, 4k, ultra detailed. ")
+PREFIX = ("stylized 3D game render, high-end mobile game CG, stylized cartoon-realism (Honor of "
+          "Kings / Overwatch / League of Legends 3D hero look), CLEARLY stylized proportions: "
+          "slightly oversized head, about 5 heads tall, stocky heroic athletic build, NOT "
+          "photorealistic and NOT cute baby chibi, mature confident faces, dramatic cinematic "
+          "lighting, Unreal Engine 5, 4k, ultra detailed. ")
 
 SCENES = [
- ("01-match-hero", "landscape_16_9", "live match gameplay moment, a star striker dribbling past a defender near the box, in-game HUD overlay with scoreboard, match timer 67:32 and small radar minimap, broadcast camera angle, packed photoreal stadium under floodlights, dramatic atmosphere"),
- ("02-star-card", "portrait_16_9", "cinematic in-engine close-up of a determined adult male star striker, realistic sweat and skin detail, realistic emerald-green and white kit, night stadium floodlights bokeh, player showcase screen, serious confident expression"),
- ("03-club-home", "portrait_16_9", "football career mode club hub screen, realistic modern stadium exterior at golden sunset, sleek dark game UI panels and menu buttons overlay, resource and squad widgets, next-gen management game interface"),
- ("04-gacha", "portrait_16_9", "player pack walkout reveal screen, a realistic star footballer walkout under a spotlight, golden volumetric lighting, premium rarity card UI frame and stats overlay, ultimate team style reveal"),
- ("05-minigame", "portrait_16_9", "penalty kick gameplay moment, realistic striker stepping up to shoot, goalkeeper on the line, on-screen aim arrow and power meter UI, broadcast camera behind the taker, tense floodlit stadium"),
- ("06-goal", "landscape_16_9", "goal celebration gameplay moment, star player sliding on his knees celebrating, roaring photoreal crowd, in-game HUD shows score 2-1, night stadium with fireworks, epic broadcast replay angle"),
+ ("s5-01-match", "landscape_16_9", "in-game football match, a stylized 5-heads-tall hero striker with slightly big head and heroic build dribbling past a defender, broadcast camera, semi-stylized stadium with crowd, in-game HUD scoreboard and timer overlay, dynamic action"),
+ ("s5-02-player", "portrait_16_9", "full body stylized star striker hero standing pose, clearly 5 heads tall with slightly oversized head and stocky heroic proportions, emerald-green and white kit, stadium floodlights, character showcase, splash-art style"),
+ ("gvg-01-worldmap", "landscape_16_9", "zoomed-out top-down 4X strategy world map gameplay screenshot, dozens of tiny player city bases dotted across grid terrain with rivers and roads, colored alliance territory regions, small marching army units moving along roads, resource tiles, fog of war at edges, a central fortress under siege by many small troops, minimap and alliance power UI HUD overlay, Whiteout Survival / Last War world map view, mobile strategy game"),
+ ("gvg-02-battle", "landscape_16_9", "zoomed-in section of a 4X strategy map during guild vs guild war, many small alliance-colored troop march lines converging to siege an enemy fortress city, rally arrows, banners, battle number popups, march and rally UI overlay, top-down strategy camera, mobile SLG screenshot"),
+ ("gvg-03-base", "portrait_16_9", "player home base on the SLG world map, a fortified football club city with a central stadium, training grounds, walls, barracks and resource buildings, isometric base-building view, upgrade and resource UI overlay, stylized 3D mobile SLG"),
 ]
 
 def gen(name, size, scene):
