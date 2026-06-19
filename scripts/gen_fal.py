@@ -13,19 +13,26 @@ MODEL = os.environ.get("FAL_MODEL", "fal-ai/flux/dev")
 ENDPOINT = f"https://fal.run/{MODEL}"
 OUT = pathlib.Path("docs/design/art/generated"); OUT.mkdir(parents=True, exist_ok=True)
 
-PREFIX = ("in-game screenshot of a next-gen AAA football video game, EA Sports FC / eFootball "
-          "style, photorealistic 3D rendering, Unreal Engine 5, realistic stadium, kits, skin and "
-          "faces, athletic adult male footballers. REALISTIC rendering but with a SUBTLY enlarged "
-          "head, about 6.5 heads tall, a slight tasteful stylization for game readability and "
-          "charm — still photoreal materials, NOT cartoon, NOT chibi. Broadcast camera, 4k, ultra "
-          "detailed. ")
+PREFIX = ""  # 每个场景自带完整提示词(角色与地图风格不同)
+
+CHAR = ("premium realistic 3D caricature of an ADULT male football star, mature face with light "
+        "stubble, realistic detailed skin and NORMAL realistic-sized eyes, exaggerated only by a "
+        "noticeably ENLARGED head on a realistic athletic adult body (caricature proportion about "
+        "4.5 heads), photorealistic kit, grass and stadium, Unreal Engine 5, 4k, serious confident "
+        "expression. NOT a child, NOT cute, NOT big anime eyes, NOT a baby, NOT chibi. ")
+
+MAP = ("mobile 4X SLG strategy world map gameplay screenshot, Whiteout Survival and Last War style, "
+       "3/4 top-down stylized terrain, MANY small stadium base icons and colored alliance territory "
+       "tiles, dotted march lines with tiny troop icons moving between bases, clear mobile game UI "
+       "chrome: top resource bar with icons and numbers, bottom row of menu buttons, side event and "
+       "alliance/march buttons, minimap in corner, realistic-stylized 3D rendering, 4k. ")
 
 SCENES = [
- ("r6-01-match", "landscape_16_9", "live match gameplay, a star striker (subtly enlarged head, realistic body) dribbling past a defender, in-game HUD scoreboard and timer overlay, broadcast camera, packed photoreal stadium under floodlights, dramatic"),
- ("r6-02-player", "portrait_16_9", "full body realistic star striker standing pose, subtly enlarged head ~6.5 heads tall, realistic emerald-green and white kit and shorts, photoreal skin, stadium floodlights, player showcase screen"),
- ("earth-01-globe", "landscape_16_9", "realistic 3D strategy view of planet Earth as a global football SLG world map, real continents and oceans seen from space, glowing football club stadium bases placed on real-world cities, colored alliance territories spanning real countries, glowing arc march/route lines between cities across the globe, holographic strategy UI overlay, realistic rendering, epic global scale, night side city lights"),
- ("earth-02-region", "landscape_16_9", "zoomed-in region of the real-Earth football SLG world map over Europe, realistic terrain and coastlines with real cities as fortified stadium bases, alliance territory borders over real countries, small marching armies along routes between cities, strategy game UI panels (alliance, power, march), realistic rendering, top-down strategic camera"),
- ("earth-03-base", "portrait_16_9", "a player's fortified football club city base on the real-world strategy map, a real-city themed base with a central modern stadium, training grounds, walls and resource buildings, realistic isometric base view, upgrade and resource UI overlay, next-gen SLG"),
+ ("c-01-match", "landscape_16_9", CHAR + "two big-head caricature footballers contesting the ball during a live match, one dribbling past the other, broadcast camera angle, packed stadium under floodlights, in-game HUD scoreboard and timer overlay, dynamic"),
+ ("c-02-player", "portrait_16_9", CHAR + "full body big-head caricature star striker confident standing pose, realistic green and gold kit and shorts, stadium floodlights background, player showcase screen"),
+ ("map-01-world", "landscape_16_9", MAP + "football themed: the player's club stadium base and many neighboring alliance stadium bases spread across a stylized real-world map with real continents and coastlines, colored alliance territory regions, small marching troop armies along routes between cities, a giant central championship stadium being contested by alliances, football resource tiles, fog of war at edges"),
+ ("map-02-war", "landscape_16_9", MAP + "football themed guild vs guild alliance war: many alliance-colored troop march lines converging to attack an enemy stadium-fortress city, rally arrows, banners, battle number popups, alliance war and rally UI panels, tense"),
+ ("map-03-base", "portrait_16_9", MAP + "football themed: the player's own club city base on the world map, a central modern stadium surrounded by training grounds, barracks and resource buildings inside city walls, isometric base view, build and upgrade UI buttons"),
 ]
 
 def gen(name, size, scene):
