@@ -15,24 +15,26 @@ OUT = pathlib.Path("docs/design/art/generated"); OUT.mkdir(parents=True, exist_o
 
 PREFIX = ""  # 每个场景自带完整提示词(角色与地图风格不同)
 
-CHAR = ("premium realistic 3D caricature of an ADULT male football star, mature face with light "
-        "stubble, realistic detailed skin and NORMAL realistic-sized eyes, exaggerated only by a "
-        "noticeably ENLARGED head on a realistic athletic adult body (caricature proportion about "
-        "4.5 heads), photorealistic kit, grass and stadium, Unreal Engine 5, 4k, serious confident "
-        "expression. NOT a child, NOT cute, NOT big anime eyes, NOT a baby, NOT chibi. ")
+CHAR = ("premium 3D caricature of a football star, head MODESTLY enlarged (subtle caricature, about "
+        "5.5 heads tall, NOT extreme bobblehead, NOT chibi, NOT a child), realistic detailed adult "
+        "face, skin and hair, realistic athletic adult body and football kit, photoreal stadium "
+        "background, Unreal Engine 5, 4k, confident mature expression. ")
 
-MAP = ("mobile 4X SLG strategy world map gameplay screenshot, Whiteout Survival and Last War style, "
-       "3/4 top-down stylized terrain, MANY small stadium base icons and colored alliance territory "
-       "tiles, dotted march lines with tiny troop icons moving between bases, clear mobile game UI "
-       "chrome: top resource bar with icons and numbers, bottom row of menu buttons, side event and "
-       "alliance/march buttons, minimap in corner, realistic-stylized 3D rendering, 4k. ")
+MAP = ("mobile MMO 4X SLG world map gameplay screenshot, Last War Survival and Whiteout Survival "
+       "style, 3/4 top-down stylized terrain, MANY individual player bases each as a small football "
+       "stadium / club base with a floating name label, alliance tag and coordinates above it "
+       "(simulating many other online players), colored alliance territory regions, dotted march "
+       "lines with team-bus and troop icons moving between bases, football resource and event tiles; "
+       "full mobile game UI chrome: top resource bar with currency icons and numbers, player avatar "
+       "top-left, bottom navigation bar with menu buttons, side floating alliance/event/march "
+       "buttons, chat box bottom-left, minimap bottom-right; football themed, realistic-stylized 3D, "
+       "4k, authentic in-game screenshot. ")
 
 SCENES = [
- ("c-01-match", "landscape_16_9", CHAR + "two big-head caricature footballers contesting the ball during a live match, one dribbling past the other, broadcast camera angle, packed stadium under floodlights, in-game HUD scoreboard and timer overlay, dynamic"),
- ("c-02-player", "portrait_16_9", CHAR + "full body big-head caricature star striker confident standing pose, realistic green and gold kit and shorts, stadium floodlights background, player showcase screen"),
- ("map-01-world", "landscape_16_9", MAP + "football themed: the player's club stadium base and many neighboring alliance stadium bases spread across a stylized real-world map with real continents and coastlines, colored alliance territory regions, small marching troop armies along routes between cities, a giant central championship stadium being contested by alliances, football resource tiles, fog of war at edges"),
- ("map-02-war", "landscape_16_9", MAP + "football themed guild vs guild alliance war: many alliance-colored troop march lines converging to attack an enemy stadium-fortress city, rally arrows, banners, battle number popups, alliance war and rally UI panels, tense"),
- ("map-03-base", "portrait_16_9", MAP + "football themed: the player's own club city base on the world map, a central modern stadium surrounded by training grounds, barracks and resource buildings inside city walls, isometric base view, build and upgrade UI buttons"),
+ ("char-messi", "portrait_16_9", CHAR + "the football star is Lionel Messi, recognizable likeness: relatively short, short light beard, brown hair, generic light-blue and white striped kit, full body confident standing pose, player showcase screen"),
+ ("char-zidane", "portrait_16_9", CHAR + "the football legend is Zinedine Zidane, recognizable likeness: bald head, mature composed face, tall elegant build, generic all-white kit, full body standing pose, player showcase screen. IMPORTANT keep the head only slightly enlarged, about 6 heads tall, subtle caricature, do not make the head too big"),
+ ("map-01-world", "landscape_16_9", MAP + "wide world map view with many player stadium bases and floating name/alliance labels spread over real-world style terrain, alliance territories, marches, a central championship stadium fortress contested by alliances"),
+ ("map-02-war", "landscape_16_9", MAP + "zoomed-in alliance war scene, several alliance-colored teams marching to siege an enemy stadium fortress, many surrounding player bases with name labels, rally arrows and march lines, battle number popups"),
 ]
 
 def gen(name, size, scene):
