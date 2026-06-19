@@ -13,3 +13,4 @@
 - Phase 0 approved. Produced first PrevizGate: Art Style Direction (art-style-previz.md + style-board.svg). Recommendation: core match = stylized semi-realistic (B), UA minigames = chibi (C). Awaiting user review.
 - 美术风格 PrevizGate 通过:全局卡通 chibi(ADR-0004),买量小游戏=踢球类爽点;定位调整为街机/休闲向足球 SLG。更新 art README、STATE、vision、ADR 索引。
 - 双轨并行产出:A轨 球物理+带球手感 PrevizGate(feel-previz.md + control-layout.svg);B轨 SLG 经济闭环 + 球员数据 v1 纸面规格(economy/spec.md + footballer-data/spec.md + economy-loop.svg)。均待审。
+- A轨手感 PrevizGate 设计批准;新增手机可玩 previz `feel-prototype.html`(HTML5 2D 近似:虚拟摇杆带球/冲刺控球变松/急停/射门入网)。B轨 经济(6资源)+ 球员数据(五档稀有度,付费门控Phase3+)纸面规格批准。STATE 同步标 ✅。

@@ -5,8 +5,8 @@
 
 ## 模块:Ball Physics + Dribbling Feel
 - 关联:`design/match/README.md`(子模块 ball-physics + footballer-control)
-- 状态:⬜ **待审**
-- 审核日期: / 结论:
+- 状态:✅ **设计已批准**(2026-06-19,引擎手感验收待 UE 灰盒)
+- 审核日期:2026-06-19 / 结论:速度越快控球越松(风险回报)认同;手柄全手动+触屏 SmartAssist 映射认同;手机可玩 previz 见 `feel-prototype.html`。
 
 ## 1. 目标
 让玩家"带球跑动、急停变向、射门入网"这一串操作**跟手、有重量感、有爽感**。卡通画风,但操作反馈是核心。

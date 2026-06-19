@@ -15,15 +15,15 @@
 
 ## 2. 比赛层(MatchLayer)
 - ⬜ UE5 工程骨架
-- 🚧 球物理 + 带球手感 — **PrevizGate 待审**(`design/match/previz/feel-previz.md` + `control-layout.svg`)
+- ✅ 球物理 + 带球手感 — **PrevizGate 设计已批准**(2026-06-19);手机可玩 previz:`feel-prototype.html`。引擎内手感验收待 UE 灰盒。
 - ⬜ 传球 / 射门
 - ⬜ 队友/对手比赛 AI
 - ⬜ 比赛流程与规则
 
 ## 3. 元层(MetaLayer / SLG)
 - ⬜ 俱乐部基地
-- 🚧 球员数据系统 — **纸面规格 v1 完成,待审**(`design/slg/footballer-data/spec.md`)
-- 🚧 养成 / 经济 — **纸面规格 v1 完成,待审**(`design/slg/economy/spec.md` + `economy-loop.svg`)
+- ✅ 球员数据系统 — **纸面规格 v1 批准**(2026-06-19);五档稀有度 N/R/SR/SSR/UR
+- ✅ 养成 / 经济 — **纸面规格 v1 批准**(2026-06-19);6 种资源;付费门控 Phase 3+
 - ⬜ 抽卡 Signing(实现)
 - ⬜ 联盟 / 联赛
 - ⬜ 活动 / LiveOps
