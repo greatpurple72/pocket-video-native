@@ -18,13 +18,21 @@
 1. File → New Level → Basic(自带地面光照)。保存为 `Match01`。
 2. 放一块大地面(默认 Floor 即可,作球场)。
 3. 从 Place Actors 搜 **MatchBall**,拖一个到地面上方一点(让它落到地面)。
-4. World Settings → GameMode Override 设为 **MatchGameMode**(已在 DefaultEngine.ini 设为全局默认,通常无需手动设)。
-5. 点 **Play**。系统会自动生成并附身一个 **Footballer**。
+4. 从 Place Actors 搜 **GoalZone**,在球场两端各放一个;选中其一在 Details 勾选 **bIsHomeGoal**(另一个不勾),作为两边球门。
+5. World Settings → GameMode Override 设为 **MatchGameMode**(已在 DefaultEngine.ini 设为全局默认,通常无需手动设)。
+6. 点 **Play**。系统会:自动附身一个 **Footballer**、生成一个**对手 AI(BotFootballer)**、左上/中显示**比分与计时 HUD**。
 
 ## 操作
 - 移动/带球:WASD / 方向键 / 手柄左摇杆
 - 冲刺:Shift / 手柄 RT(按住)——注意冲刺时球被推远,控球变松(风险)
 - 射门:空格 / 手柄 □ —— 球起弧飞出
+- 传球:E / 手柄 ○ —— 平传略带上抬
+- 进球:球进入 GoalZone → 比分 +1、自动回中开球
+
+## 一场比赛感(已含)
+- **比分/计时 HUD**(`MatchHUD`,纯 C++ 画在屏幕,无需 UMG 资源)
+- **对手 AI**(`BotFootballer`):追球→靠近把球踢向目标球门(在其 Details 里设 `TargetGoal` 对准你的球门位置)
+- **进球判定 + 回中**(`GoalZone` + `MatchGameMode`)
 
 ## 调手感(无需改代码)
 选中场景里的 Footballer(或打开其蓝图/默认),在 Details 的 **Feel** 分类里实时调:

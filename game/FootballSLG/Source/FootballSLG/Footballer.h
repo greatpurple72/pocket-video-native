@@ -40,6 +40,7 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Feel") float SprintTouchInterval = 0.16f;
 	UPROPERTY(EditAnywhere, Category = "Feel") float ShootSpeed = 1700.f;         // 射门力度
 	UPROPERTY(EditAnywhere, Category = "Feel") float ShootLift = 450.f;           // 射门上抬(起弧)
+	UPROPERTY(EditAnywhere, Category = "Feel") float PassSpeed = 950.f;           // 传球力度(平地)
 
 	UPROPERTY() AMatchBall* Ball = nullptr;
 
@@ -52,4 +53,5 @@ private:
 	void StartSprint();
 	void StopSprint();
 	void Shoot();
+	void Pass();
 };

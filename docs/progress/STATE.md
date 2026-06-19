@@ -16,8 +16,10 @@
 ## 2. 比赛层(MatchLayer)
 - 🚧 UE5 工程骨架 — 起步代码已写(`game/FootballSLG/`),待本地编译
 - 🚧 球物理 + 带球手感 — 设计批准;**C++ 已实现**(MatchBall/Footballer),待引擎内体感验收+调参
-- 🚧 射门 — C++ 已实现(Shoot 冲量起弧),待验收
-- ⬜ 传球 / 队友·对手 AI / 比赛流程与规则(Phase 1)
+- 🚧 射门 / 传球 — C++ 已实现(Shoot 起弧 / Pass 平传),待验收
+- 🚧 进球判定 + 比分/计时 HUD — C++ 已实现(GoalZone + MatchGameMode + MatchHUD 纯代码HUD),待验收
+- 🚧 对手 AI(灰盒) — C++ 已实现(BotFootballer 追球+踢门),待验收
+- ⬜ 队友 AI / 标准 11v11 / 越位等完整规则(Phase 1 继续)
 
 ## 3. 元层(MetaLayer / SLG)
 - ⬜ 俱乐部基地

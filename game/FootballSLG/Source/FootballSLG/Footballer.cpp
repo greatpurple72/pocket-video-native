@@ -101,6 +101,7 @@ void AFootballer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &AFootballer::StartSprint);
 	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &AFootballer::StopSprint);
 	PlayerInputComponent->BindAction("Shoot", IE_Pressed, this, &AFootballer::Shoot);
+	PlayerInputComponent->BindAction("Pass", IE_Pressed, this, &AFootballer::Pass);
 }
 
 void AFootballer::MoveForward(float Value)
@@ -144,5 +145,21 @@ void AFootballer::Shoot()
 		Fwd.Z = 0.f;
 		Fwd.Normalize();
 		Ball->Kick(Fwd * ShootSpeed + FVector(0.f, 0.f, ShootLift));
+	}
+}
+
+void AFootballer::Pass()
+{
+	if (!Ball)
+	{
+		return;
+	}
+	const float Dist2D = (Ball->GetActorLocation() - GetActorLocation()).Size2D();
+	if (Dist2D < ControlRadius + 60.f)
+	{
+		FVector Fwd = GetActorForwardVector();
+		Fwd.Z = 0.f;
+		Fwd.Normalize();
+		Ball->Kick(Fwd * PassSpeed + FVector(0.f, 0.f, 120.f)); // 平传略带上抬
 	}
 }
