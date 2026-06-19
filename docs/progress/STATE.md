@@ -14,18 +14,17 @@
 - 环境:云端会话无 UE/GPU;UE 实际开发在用户本地。
 
 ## 2. 比赛层(MatchLayer)
-> 全部 ⬜ 未开始。Phase 0 启动后在此登记。
 - ⬜ UE5 工程骨架
-- ⬜ 球场 / 球员实体 / 球物理
-- ⬜ 带球 / 传球 / 射门
+- 🚧 球物理 + 带球手感 — **PrevizGate 待审**(`design/match/previz/feel-previz.md` + `control-layout.svg`)
+- ⬜ 传球 / 射门
 - ⬜ 队友/对手比赛 AI
 - ⬜ 比赛流程与规则
 
 ## 3. 元层(MetaLayer / SLG)
-> 全部 ⬜ 未开始。
 - ⬜ 俱乐部基地
-- ⬜ 球员数据系统 / 抽卡
-- ⬜ 养成 / 经济
+- 🚧 球员数据系统 — **纸面规格 v1 完成,待审**(`design/slg/footballer-data/spec.md`)
+- 🚧 养成 / 经济 — **纸面规格 v1 完成,待审**(`design/slg/economy/spec.md` + `economy-loop.svg`)
+- ⬜ 抽卡 Signing(实现)
 - ⬜ 联盟 / 联赛
 - ⬜ 活动 / LiveOps
 

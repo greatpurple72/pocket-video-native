@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="640" viewBox="0 0 1100 640" font-family="Segoe UI, Arial, sans-serif">
+  <rect width="1100" height="640" fill="#0e1116"/>
+  <text x="550" y="44" fill="#ffffff" font-size="26" font-weight="700" text-anchor="middle">SLG 经济核心闭环(Track B ↔ Track A)</text>
+
+  <!-- nodes -->
+  <!-- Match -->
+  <rect x="430" y="90" width="240" height="80" rx="14" fill="#10261a" stroke="#3fae6b" stroke-width="2"/>
+  <text x="550" y="125" fill="#9fe7bb" font-size="18" font-weight="700" text-anchor="middle">实时比赛(Track A)</text>
+  <text x="550" y="150" fill="#8b97a6" font-size="13" text-anchor="middle">你亲手踢 → 胜负/表现</text>
+
+  <!-- Resources -->
+  <rect x="820" y="270" width="240" height="100" rx="14" fill="#1a2030" stroke="#ffd23f"/>
+  <text x="940" y="302" fill="#ffe27a" font-size="17" font-weight="700" text-anchor="middle">资源产出</text>
+  <text x="940" y="326" fill="#cfd8dc" font-size="12" text-anchor="middle">Funds · TransferPoints</text>
+  <text x="940" y="346" fill="#cfd8dc" font-size="12" text-anchor="middle">Fragments · Prestige</text>
+
+  <!-- Progression -->
+  <rect x="430" y="470" width="240" height="100" rx="14" fill="#221a2e" stroke="#a06bff"/>
+  <text x="550" y="502" fill="#cbb6ff" font-size="17" font-weight="700" text-anchor="middle">养成</text>
+  <text x="550" y="526" fill="#cfd8dc" font-size="12" text-anchor="middle">训练 / 抽卡 Signing</text>
+  <text x="550" y="546" fill="#cfd8dc" font-size="12" text-anchor="middle">俱乐部建筑升级</text>
+
+  <!-- Squad stronger -->
+  <rect x="40" y="270" width="240" height="100" rx="14" fill="#10261a" stroke="#3fae6b"/>
+  <text x="160" y="302" fill="#9fe7bb" font-size="17" font-weight="700" text-anchor="middle">阵容更强</text>
+  <text x="160" y="326" fill="#cfd8dc" font-size="12" text-anchor="middle">11 人属性提升</text>
+  <text x="160" y="346" fill="#cfd8dc" font-size="12" text-anchor="middle">→ 输入下一场比赛</text>
+
+  <!-- arrows -->
+  <defs><marker id="a" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0 0 L8 3 L0 6 z" fill="#6f7b8a"/></marker></defs>
+  <path d="M670 150 Q820 180 900 268" fill="none" stroke="#6f7b8a" stroke-width="3" marker-end="url(#a)"/>
+  <text x="830" y="210" fill="#ffd23f" font-size="13">赢 → 产出</text>
+  <path d="M900 372 Q800 470 672 510" fill="none" stroke="#6f7b8a" stroke-width="3" marker-end="url(#a)"/>
+  <text x="770" y="460" fill="#cbb6ff" font-size="13">资源 → 投入养成</text>
+  <path d="M430 520 Q220 500 175 372" fill="none" stroke="#6f7b8a" stroke-width="3" marker-end="url(#a)"/>
+  <text x="230" y="470" fill="#9fe7bb" font-size="13">养成 → 变强</text>
+  <path d="M200 268 Q300 180 430 145" fill="none" stroke="#6f7b8a" stroke-width="3" marker-end="url(#a)"/>
+  <text x="250" y="210" fill="#9fe7bb" font-size="13">更强 → 打更高级别</text>
+
+  <!-- paywall -->
+  <rect x="430" y="300" width="240" height="48" rx="10" fill="#2a1a1a" stroke="#ff6b6b"/>
+  <text x="550" y="330" fill="#ffb3b3" font-size="14" text-anchor="middle">⏳ 时间门控 → Gems 加速(付费)</text>
+
+  <text x="550" y="620" fill="#6f7b8a" font-size="13" text-anchor="middle">两轨解耦:养成只把"最终属性"喂给比赛;比赛只回传"结果"。可并行开发。</text>
+</svg>
