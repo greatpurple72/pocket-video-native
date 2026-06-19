@@ -16,3 +16,4 @@
 - A轨手感 PrevizGate 设计批准;新增手机可玩 previz `feel-prototype.html`(HTML5 2D 近似:虚拟摇杆带球/冲刺控球变松/急停/射门入网)。B轨 经济(6资源)+ 球员数据(五档稀有度,付费门控Phase3+)纸面规格批准。STATE 同步标 ✅。
 - previz 在线托管打通:GitHub Pages 自动部署工作流(.github/workflows/deploy-previz.yml),固定网址 https://greatpurple72.github.io/pocket-video-native/(手感 previz 为首页,自动随 docs/design 更新)。
 - 用户反馈 2D demo 不够,要 3D。决策:维持卡通画风(ADR-0004),手感/动画/镜头对标 eFootball 流畅度;双线并行。产出:① 网页 3D previz `feel-3d.html`(Three.js:卡通占位球员+透视球场+eFootball式跟随镜头+带球/冲刺/射门),设为 Pages 首页(2D 移到 /feel2d.html);② 真 UE5 灰盒任务清单 `docs/ue-project/phase0-greybox-tasklist.md`。
+- 用户不在电脑前,产出"最终效果图+效果视频"(云端可行形态):5 张核心界面卡通效果图(club-home/match-hud/gacha/minigame/league mockup SVG)+ 自动播放愿景预告片 vision-trailer.html(分镜+运镜+文案,手机可看,卡通占位非成片)。部署到 /trailer.html。

@@ -27,6 +27,12 @@ jobs:
           mkdir -p _site
           cp docs/design/match/previz/feel-3d.html _site/index.html
           cp docs/design/match/previz/feel-prototype.html _site/feel2d.html || true
+          cp docs/design/art/vision-trailer.html _site/trailer.html || true
+          cp docs/design/art/mockups/club-home.svg _site/mk-club.svg || true
+          cp docs/design/art/mockups/match-hud.svg _site/mk-match.svg || true
+          cp docs/design/art/mockups/gacha.svg _site/mk-gacha.svg || true
+          cp docs/design/art/mockups/minigame.svg _site/mk-mini.svg || true
+          cp docs/design/art/mockups/league.svg _site/mk-league.svg || true
           cp docs/design/match/control-layout.svg _site/control-layout.svg || true
           cp docs/design/art/previz/style-board.svg _site/style-board.svg || true
           cp docs/design/slg/economy/economy-loop.svg _site/economy-loop.svg || true
