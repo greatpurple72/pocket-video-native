@@ -26,3 +26,4 @@
 - 用锁定比例(写实+头略大~6头身,char-proto公式)出球星卡:梅西/齐达内/C罗(star-messi/zidane/ronaldo),头身比统一。
 - 修正齐达内头身比(与梅西/C罗统一)。新增界面合成 scripts/compose_screens.py(match/city 两模式):比赛实机HUD screen-match(比分/计时/雷达/摇杆/传射冲/体力)+ 俱乐部主城实机界面 screen-city(资源条/建筑等级+升级/开始比赛/底部导航)。底图 match-base/club-city。
 - compose_screens.py 增 gacha/rank/rally 三模式:抽卡揭晓 screen-gacha(UR金光/五星/属性/单抽十连)、跨服赛季榜 screen-rank(战力榜)、联盟集结弹窗 screen-rally(球队大巴集结/倒计时/加入发起,叠在世界地图上)。核心界面实机概念图全套完成。
+- 产出 PV 制作包 docs/design/art/pv-seedance-prompts.md(SeeDance 2.0 图生视频):14镜分镜表(每镜=参考首帧+运镜提示词+字幕)+剪辑/音乐/字幕/导出指引+一致性技巧,目标75-90s领导审核版。补生成PV首帧:pv-title/pv-celebration/pv-penalty/pv-skill/pv-squad。
