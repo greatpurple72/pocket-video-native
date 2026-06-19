@@ -18,3 +18,4 @@
 - 用户反馈 2D demo 不够,要 3D。决策:维持卡通画风(ADR-0004),手感/动画/镜头对标 eFootball 流畅度;双线并行。产出:① 网页 3D previz `feel-3d.html`(Three.js:卡通占位球员+透视球场+eFootball式跟随镜头+带球/冲刺/射门),设为 Pages 首页(2D 移到 /feel2d.html);② 真 UE5 灰盒任务清单 `docs/ue-project/phase0-greybox-tasklist.md`。
 - 用户不在电脑前,产出"最终效果图+效果视频"(云端可行形态):5 张核心界面卡通效果图(club-home/match-hud/gacha/minigame/league mockup SVG)+ 自动播放愿景预告片 vision-trailer.html(分镜+运镜+文案,手机可看,卡通占位非成片)。部署到 /trailer.html。
 - 用户要 EA/Konami 级效果图,且有即梦会员。澄清:云端无法直接操作即梦/出照片级图。决策:维持卡通但质量基线升级为"顶级渲染"。产出即梦提示词包 `docs/design/art/jimeng-prompt-pack.md`(6 场景图 + 图生视频运镜 + 一致性方案),供用户用即梦生成 AAA 卡通效果图/概念视频。更新 art README 基准。
+- 用 fal.ai(FLUX/flux-dev)经脚本直接生成 6 张顶级卡通渲染效果图,存 docs/design/art/generated/(01比赛/02球星卡/03俱乐部/04抽卡/05小游戏/06联盟)。脚本 scripts/gen_fal.py(密钥走环境变量,未入库)。
