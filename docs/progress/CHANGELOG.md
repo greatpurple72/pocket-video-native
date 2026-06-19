@@ -11,3 +11,4 @@
 
 ## 2026-06-19 (cont.)
 - Phase 0 approved. Produced first PrevizGate: Art Style Direction (art-style-previz.md + style-board.svg). Recommendation: core match = stylized semi-realistic (B), UA minigames = chibi (C). Awaiting user review.
+- 美术风格 PrevizGate 通过:全局卡通 chibi(ADR-0004),买量小游戏=踢球类爽点;定位调整为街机/休闲向足球 SLG。更新 art README、STATE、vision、ADR 索引。

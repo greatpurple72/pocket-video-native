@@ -36,7 +36,7 @@
 
 ## 5. PrevizGate(效果审核)状态
 > 每个模块的效果图/视频审核状态在此登记。
-- 🚧 **美术风格定调** — 待审。产物:`docs/design/art/previz/art-style-previz.md` + `style-board.svg`。推荐:核心比赛=B 风格化半写实 / 买量小游戏=C chibi。
+- ✅ **美术风格定调**(2026-06-19 通过)— **全局卡通 chibi(C)**;买量小游戏=踢球类爽点。定位=街机/休闲向足球 SLG。归档 ADR-0004,基准 `design/art/README.md`。
 
 ---
 
