@@ -15,25 +15,16 @@ OUT = pathlib.Path("docs/design/art/generated"); OUT.mkdir(parents=True, exist_o
 
 PREFIX = ""  # 每个场景自带完整提示词(角色与地图风格不同)
 
-CHAR = ("realistic 3D football game character, EA Sports FC / eFootball style, almost realistic "
-        "proportions with only a SUBTLY enlarged head — about 6.5 heads tall, just a little bigger "
-        "than realistic for charm and readability, realistic adult face, skin, hair and kit, "
-        "photoreal stadium background, Unreal Engine 5, 4k. NOT a caricature, NOT a bobblehead, "
-        "NOT chibi, the head is only slightly larger than normal. ")
-
-MAP = ("top-down 3/4 SLG strategy world map terrain, Last War Survival and Whiteout Survival style, "
-       "an OUTDOOR world map of green grassland with roads, rivers, forests and rocky regions; many "
-       "separate player bases scattered across the land with spacing, EACH base built as a small "
-       "fortified football club with its own little stadium and walls; colored alliance territory "
-       "ground tints, a larger central fortress stadium to contest. This is an outdoor strategic "
-       "world map terrain, NOT one giant football pitch, there is no big soccer field, bases sit on "
-       "grassland. Clean render with NO text and NO UI (UI added later), realistic-stylized 3D, "
-       "top-down strategic camera, 4k. ")
+CHAR = ("realistic 3D football game player render, EA Sports FC / eFootball style, photoreal skin, "
+        "hair, kit and stadium. The body has FULLY REALISTIC proportions and the head is ONLY about "
+        "10 percent larger than normal (roughly 6 heads tall) — a very subtle stylization, clearly "
+        "NOT a bobblehead, NOT a caricature, NOT chibi, just a slightly larger head on a realistic "
+        "athletic body. Full body standing showcase pose, premium player card render, 4k. ")
 
 SCENES = [
- ("char-messi", "portrait_16_9", CHAR + "the player is Lionel Messi, recognizable likeness: relatively short, short light beard, brown hair, generic light-blue and white striped kit, full body confident standing pose on the pitch, player showcase"),
- ("char-zidane", "portrait_16_9", CHAR + "the player is Zinedine Zidane, recognizable likeness: bald head, mature composed face, tall elegant build, generic all-white kit, full body standing pose on the pitch, player showcase"),
- ("map-terrain", "landscape_16_9", "premium stylized 3D strategy world map, 3/4 top-down angle, a RECOGNIZABLE real-world Earth map with stylized continents, coastlines and oceans (Civilization / Risk premium game-art look); the land is covered with MANY small football STADIUM club-city bases dotted across regions, colored federation territory regions tinting different countries, a glowing GRAND CHAMPIONSHIP STADIUM stronghold at the center surrounded by a ring of iconic landmark stadium strongholds, roads and sea routes with dotted march lines, fog of war at the edges; clean render with NO text and NO UI overlay, premium mobile SLG world map concept art, dramatic lighting, 4k"),
+ ("star-messi", "portrait_16_9", CHAR + "the player is Lionel Messi, recognizable likeness: relatively short, short dark beard, brown hair, light-blue and white vertical striped national kit, confident calm expression"),
+ ("star-zidane", "portrait_16_9", CHAR + "the player is Zinedine Zidane, recognizable likeness: bald head, mature composed face, tall elegant build, all-white kit"),
+ ("star-ronaldo", "portrait_16_9", CHAR + "the player is Cristiano Ronaldo, recognizable likeness: athletic muscular build, short dark hair, sharp confident expression, red and green kit"),
 ]
 
 def gen(name, size, scene):
