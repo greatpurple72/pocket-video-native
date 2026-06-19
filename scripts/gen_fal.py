@@ -23,8 +23,10 @@ CHAR = ("realistic 3D football game player render, EA Sports FC / eFootball styl
 
 SCENES = [
  ("star-messi", "portrait_16_9", CHAR + "the player is Lionel Messi, recognizable likeness: relatively short, short dark beard, brown hair, light-blue and white vertical striped national kit, confident calm expression"),
- ("star-zidane", "portrait_16_9", CHAR + "the player is Zinedine Zidane, recognizable likeness: bald head, mature composed face, tall elegant build, all-white kit"),
+ ("star-zidane", "portrait_16_9", CHAR + "the player is Zinedine Zidane, recognizable likeness: bald head, mature composed face, tall elegant build, all-white kit. IMPORTANT: the head must be CLEARLY a bit larger than realistic, about 5.5 to 6 heads tall, a visibly slightly enlarged head (but still NOT an extreme bobblehead), matching a subtly stylized game character"),
  ("star-ronaldo", "portrait_16_9", CHAR + "the player is Cristiano Ronaldo, recognizable likeness: athletic muscular build, short dark hair, sharp confident expression, red and green kit"),
+ ("match-base", "landscape_16_9", "in-game football match gameplay, EA Sports FC / eFootball style, two players with subtly enlarged heads (about 6 heads tall, realistic bodies) contesting the ball, one dribbling past the other, broadcast camera angle, photoreal stadium under floodlights, dynamic motion blur, clean render with NO UI overlay, 4k"),
+ ("club-city", "landscape_16_9", "in-game club home base city view, a modern football stadium at the center surrounded by training grounds, youth academy fields, a medical center and commercial buildings, isometric 3/4 top-down view, daytime, premium mobile SLG city builder, clean render with NO text UI, 4k"),
 ]
 
 def gen(name, size, scene):

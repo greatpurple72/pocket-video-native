@@ -24,3 +24,4 @@
 - 美术锁定:角色=写实成年大头漫画比例(匹配用户参考图,c-02-player);GvG大地图改为参考无尽冬日/Last War 的"实机SLG地图界面"风(map-02-war 达成:顶部UI条/等距基地/行军虚线/中央要塞),按真实世界地理+足球设定;下一步把地图建筑足球化(体育场要塞)。脚本 CHAR/MAP 双风格提示词。
 - 世界大地图定稿(设计师综合):写实世界地图(可辨认大陆)+各足协领地着色+各大洲玩家俱乐部基地(队徽+名字+联盟标签)+中央"世界冠军球场"赛季争夺(=Capital Clash)+跨洲行军+完整SLG UI。新增设计文档 docs/design/slg/world-map/spec.md;map-terrain 出写实世界地图底图,compose_map_ui 叠足球化UI/基地/目标/行军。
 - 用锁定比例(写实+头略大~6头身,char-proto公式)出球星卡:梅西/齐达内/C罗(star-messi/zidane/ronaldo),头身比统一。
+- 修正齐达内头身比(与梅西/C罗统一)。新增界面合成 scripts/compose_screens.py(match/city 两模式):比赛实机HUD screen-match(比分/计时/雷达/摇杆/传射冲/体力)+ 俱乐部主城实机界面 screen-city(资源条/建筑等级+升级/开始比赛/底部导航)。底图 match-base/club-city。
