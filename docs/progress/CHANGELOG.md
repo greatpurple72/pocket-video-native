@@ -8,3 +8,6 @@
 - 搭建项目上下文架构:`CLAUDE.md`、`docs/00-INDEX.md`、vision(愿景+术语)、progress(STATE/ROADMAP/CHANGELOG/session-log)、architecture(ADR)、conventions、_templates、design 模块种子、ue-project 搭建规范。
 - 确立双仓库结构(设计仓库 + 独立 UE5 仓库)与本地/云端协作模式。
 - 确立三项关键决策:标准 11v11 demo、双轨并行(手感+SLG)、PrevizGate 效果审核闸门。
+
+## 2026-06-19 (cont.)
+- Phase 0 approved. Produced first PrevizGate: Art Style Direction (art-style-previz.md + style-board.svg). Recommendation: core match = stylized semi-realistic (B), UA minigames = chibi (C). Awaiting user review.
