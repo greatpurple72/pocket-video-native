@@ -13,18 +13,19 @@ MODEL = os.environ.get("FAL_MODEL", "fal-ai/flux/dev")
 ENDPOINT = f"https://fal.run/{MODEL}"
 OUT = pathlib.Path("docs/design/art/generated"); OUT.mkdir(parents=True, exist_ok=True)
 
-PREFIX = ("high-end stylized 3D cartoon render, Pixar/DreamWorks cinematic quality, "
-          "Unreal Engine 5 Lumen global illumination, AAA mobile game CG, polished toon "
-          "characters, slightly chibi but well-proportioned, clean vibrant saturated colors, "
-          "cinematic lighting, soft rim light, depth of field, ultra-detailed, 8k, masterpiece. ")
+PREFIX = ("in-game screenshot of a next-gen AAA football video game, EA Sports FC / eFootball "
+          "style, photorealistic 3D rendering, Unreal Engine 5, ray tracing, photoreal stadium "
+          "and grass, detailed realistic kits, skin and faces, athletic adult male footballers "
+          "with realistic body proportions (about 5.5 heads tall, mature and serious, NOT chibi, "
+          "NOT cartoon, NOT cute), subtle motion blur, broadcast TV camera, 4k, ultra detailed. ")
 
 SCENES = [
- ("01-match-hero", "landscape_16_9", "a stylized cartoon soccer striker sprinting and dribbling at speed on a standard pitch, dynamic running pose, emerald-green and white kit, mowed grass stripes, packed stadium crowd bokeh, golden afternoon sunlight, strong rim light, low-angle dynamic wide shot, cinematic composition"),
- ("02-star-card", "portrait_16_9", "heroic half-body close-up of a stylized cartoon star striker, confident determined expression, detailed emerald kit, blurred night stadium floodlights, sparkle atmosphere, studio soft light with golden rim, designed as a UR player card"),
- ("03-club-home", "portrait_16_9", "panoramic stylized cartoon modern football club base, a polished stadium in the center, surrounded by training center, youth academy and commercial buildings, waving flags, warm golden sunset, isometric slightly top-down view, mobile game home screen vibe"),
- ("04-gacha", "portrait_16_9", "stylized cartoon legendary player gacha reveal, golden UR card frame, character emerging from radiant light, light rays, sparkling particles, epic ritual feeling, gold and purple palette, strong visual impact"),
- ("05-minigame", "portrait_16_9", "hyper-casual mobile ad style, big-head chibi soccer player taking a penalty kick, exaggerated funny pose, goalkeeper diving to save, bright candy colors, clean bright background, viral ad shot"),
- ("06-league", "landscape_16_9", "stylized cartoon epic clash of two football alliances, two team crests colliding above a stadium, fire energy vs green-pitch energy, flags and roaring crowd, dramatic esports promo poster composition"),
+ ("01-match-hero", "landscape_16_9", "live match gameplay moment, a star striker dribbling past a defender near the box, in-game HUD overlay with scoreboard, match timer 67:32 and small radar minimap, broadcast camera angle, packed photoreal stadium under floodlights, dramatic atmosphere"),
+ ("02-star-card", "portrait_16_9", "cinematic in-engine close-up of a determined adult male star striker, realistic sweat and skin detail, realistic emerald-green and white kit, night stadium floodlights bokeh, player showcase screen, serious confident expression"),
+ ("03-club-home", "portrait_16_9", "football career mode club hub screen, realistic modern stadium exterior at golden sunset, sleek dark game UI panels and menu buttons overlay, resource and squad widgets, next-gen management game interface"),
+ ("04-gacha", "portrait_16_9", "player pack walkout reveal screen, a realistic star footballer walkout under a spotlight, golden volumetric lighting, premium rarity card UI frame and stats overlay, ultimate team style reveal"),
+ ("05-minigame", "portrait_16_9", "penalty kick gameplay moment, realistic striker stepping up to shoot, goalkeeper on the line, on-screen aim arrow and power meter UI, broadcast camera behind the taker, tense floodlit stadium"),
+ ("06-goal", "landscape_16_9", "goal celebration gameplay moment, star player sliding on his knees celebrating, roaring photoreal crowd, in-game HUD shows score 2-1, night stadium with fireworks, epic broadcast replay angle"),
 ]
 
 def gen(name, size, scene):

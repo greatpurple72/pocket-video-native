@@ -9,4 +9,5 @@
 - [0001 — 选用 Unreal Engine 5](0001-engine-ue5.md)
 - [0002 — 双仓库拆分](0002-repo-split.md)
 - [0003 — 双轨并行 + PrevizGate 效果审核闸门](0003-parallel-tracks-and-previz-gate.md)
-- [0004 — 美术风格:全局卡通(chibi)](0004-art-style-cartoon.md)
+- [0004 — 美术风格:全局卡通(chibi)](0004-art-style-cartoon.md) ⛔ 被 0005 取代
+- [0005 — 美术风格改为写实向(实机截图)](0005-art-style-realistic.md)
