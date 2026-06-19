@@ -13,18 +13,19 @@ MODEL = os.environ.get("FAL_MODEL", "fal-ai/flux/dev")
 ENDPOINT = f"https://fal.run/{MODEL}"
 OUT = pathlib.Path("docs/design/art/generated"); OUT.mkdir(parents=True, exist_ok=True)
 
-PREFIX = ("stylized 3D game render, high-end mobile game CG, stylized cartoon-realism (Honor of "
-          "Kings / Overwatch / League of Legends 3D hero look), CLEARLY stylized proportions: "
-          "slightly oversized head, about 5 heads tall, stocky heroic athletic build, NOT "
-          "photorealistic and NOT cute baby chibi, mature confident faces, dramatic cinematic "
-          "lighting, Unreal Engine 5, 4k, ultra detailed. ")
+PREFIX = ("in-game screenshot of a next-gen AAA football video game, EA Sports FC / eFootball "
+          "style, photorealistic 3D rendering, Unreal Engine 5, realistic stadium, kits, skin and "
+          "faces, athletic adult male footballers. REALISTIC rendering but with a SUBTLY enlarged "
+          "head, about 6.5 heads tall, a slight tasteful stylization for game readability and "
+          "charm — still photoreal materials, NOT cartoon, NOT chibi. Broadcast camera, 4k, ultra "
+          "detailed. ")
 
 SCENES = [
- ("s5-01-match", "landscape_16_9", "in-game football match, a stylized 5-heads-tall hero striker with slightly big head and heroic build dribbling past a defender, broadcast camera, semi-stylized stadium with crowd, in-game HUD scoreboard and timer overlay, dynamic action"),
- ("s5-02-player", "portrait_16_9", "full body stylized star striker hero standing pose, clearly 5 heads tall with slightly oversized head and stocky heroic proportions, emerald-green and white kit, stadium floodlights, character showcase, splash-art style"),
- ("gvg-01-worldmap", "landscape_16_9", "zoomed-out top-down 4X strategy world map gameplay screenshot, dozens of tiny player city bases dotted across grid terrain with rivers and roads, colored alliance territory regions, small marching army units moving along roads, resource tiles, fog of war at edges, a central fortress under siege by many small troops, minimap and alliance power UI HUD overlay, Whiteout Survival / Last War world map view, mobile strategy game"),
- ("gvg-02-battle", "landscape_16_9", "zoomed-in section of a 4X strategy map during guild vs guild war, many small alliance-colored troop march lines converging to siege an enemy fortress city, rally arrows, banners, battle number popups, march and rally UI overlay, top-down strategy camera, mobile SLG screenshot"),
- ("gvg-03-base", "portrait_16_9", "player home base on the SLG world map, a fortified football club city with a central stadium, training grounds, walls, barracks and resource buildings, isometric base-building view, upgrade and resource UI overlay, stylized 3D mobile SLG"),
+ ("r6-01-match", "landscape_16_9", "live match gameplay, a star striker (subtly enlarged head, realistic body) dribbling past a defender, in-game HUD scoreboard and timer overlay, broadcast camera, packed photoreal stadium under floodlights, dramatic"),
+ ("r6-02-player", "portrait_16_9", "full body realistic star striker standing pose, subtly enlarged head ~6.5 heads tall, realistic emerald-green and white kit and shorts, photoreal skin, stadium floodlights, player showcase screen"),
+ ("earth-01-globe", "landscape_16_9", "realistic 3D strategy view of planet Earth as a global football SLG world map, real continents and oceans seen from space, glowing football club stadium bases placed on real-world cities, colored alliance territories spanning real countries, glowing arc march/route lines between cities across the globe, holographic strategy UI overlay, realistic rendering, epic global scale, night side city lights"),
+ ("earth-02-region", "landscape_16_9", "zoomed-in region of the real-Earth football SLG world map over Europe, realistic terrain and coastlines with real cities as fortified stadium bases, alliance territory borders over real countries, small marching armies along routes between cities, strategy game UI panels (alliance, power, march), realistic rendering, top-down strategic camera"),
+ ("earth-03-base", "portrait_16_9", "a player's fortified football club city base on the real-world strategy map, a real-city themed base with a central modern stadium, training grounds, walls and resource buildings, realistic isometric base view, upgrade and resource UI overlay, next-gen SLG"),
 ]
 
 def gen(name, size, scene):
