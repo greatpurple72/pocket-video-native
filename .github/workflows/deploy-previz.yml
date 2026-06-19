@@ -1,0 +1,55 @@
+name: Deploy Previz to Pages
+
+on:
+  push:
+    branches: [ "claude/football-slg-game-design-6fj69j" ]
+    paths:
+      - "docs/design/**"
+      - ".github/workflows/deploy-previz.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assemble site
+        run: |
+          mkdir -p _site
+          cp docs/design/match/previz/feel-prototype.html _site/index.html
+          cp docs/design/match/control-layout.svg _site/control-layout.svg || true
+          cp docs/design/art/previz/style-board.svg _site/style-board.svg || true
+          cp docs/design/slg/economy/economy-loop.svg _site/economy-loop.svg || true
+          cat > _site/visuals.html <<'EOF'
+          <!doctype html><meta charset="utf-8"><title>Previz Visuals</title>
+          <style>body{background:#0e1116;color:#cfd8dc;font-family:sans-serif;text-align:center;padding:20px}
+          a{color:#9fe7bb;display:block;margin:14px}img{max-width:100%;border:1px solid #2b333d;border-radius:8px}</style>
+          <h2>足球 SLG · Previz 资料</h2>
+          <a href="./index.html">▶ 手感 Previz(可玩)</a>
+          <h3>操作布局</h3><img src="./control-layout.svg">
+          <h3>美术风格板</h3><img src="./style-board.svg">
+          <h3>SLG 经济闭环</h3><img src="./economy-loop.svg">
+          EOF
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
