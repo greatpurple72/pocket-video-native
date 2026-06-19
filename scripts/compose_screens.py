@@ -71,4 +71,59 @@ elif mode=="city":
     # start match button
     panel(W//2-110,H-110,W//2+110,H-66,(255,210,90,255),r=22); txt(W//2,H-88,"▶ 开始比赛",24,(90,60,0,255),anchor="mm")
 
+def stars(cx,y,n,sz=22):
+    tot=n*(sz+4)
+    for i in range(n): txt(cx-tot//2+i*(sz+4)+sz//2,y,"★",sz,(255,210,90,255),anchor="mm")
+
+if mode=="gacha":
+    d.rectangle([0,0,W,H],fill=(10,6,20,90))
+    # golden rays from upper center
+    import math
+    ox,oy=W//2,int(H*0.32)
+    for a in range(0,360,15):
+        rad=math.radians(a); x2=ox+math.cos(rad)*W; y2=oy+math.sin(rad)*W
+        d.line([ox,oy,x2,y2],fill=(255,210,90,40),width=10)
+    panel(16,70,96,108,(200,40,40,255),r=10); txt(56,89,"UR",22,(255,255,255,255),anchor="mm")
+    stars(W//2,int(H*0.60),5,26)
+    panel(W//2-150,int(H*0.63),W//2+150,int(H*0.70),(8,14,22,210),r=12); txt(W//2,int(H*0.665),"C · 罗纳尔多  ST",20,(255,225,180,255),anchor="mm")
+    panel(W//2-160,int(H*0.71),W//2+160,int(H*0.80),(8,14,22,200),r=12)
+    st=[("速度","95"),("射门","96"),("盘带","90"),("体能","94"),("传球","85"),("防守","42")]
+    for i,(k,v) in enumerate(st):
+        cx=W//2-110+(i%3)*110; cy=int(H*0.73)+(i//3)*34; txt(cx,cy,k+" ",15,(170,190,210,255)); txt(cx+44,cy,v,15,GOLD)
+    panel(40,H-96,W//2-8,H-44,(39,196,106,255),r=16); txt((40+W//2-8)//2,H-70,"单抽  🎯30",18,(255,255,255,255),anchor="mm")
+    panel(W//2+8,H-96,W-40,H-44,(246,183,60,255),r=16); txt((W//2+8+W-40)//2,H-70,"十连抽  🎯300",18,(90,60,0,255),anchor="mm")
+
+elif mode=="rank":
+    d.rectangle([0,0,W,H],fill=(8,12,22,200))
+    txt(W//2,28,"跨服赛季排行榜 · S6",24,(255,225,150,255),anchor="mm")
+    rows=[("1","皇家骑士","RMA",GOLD,"48.6M"),("2","东方巨龙","DRG",(220,220,230,255),"45.1M"),
+          ("3","烈焰之心","RED",(205,140,80,255),"43.9M"),("4","曼城之巅","SKY",(150,170,190,255),"39.2M"),
+          ("5","绿茵王朝(你)","FCB",(120,230,140,255),"37.8M"),("6","沙漠雄鹰","DSR",(150,170,190,255),"34.0M"),
+          ("7","南十字星","ANZ",(150,170,190,255),"31.5M"),("8","狮城卫士","LON",(150,170,190,255),"28.7M")]
+    y0=64; rh=(H-120)//len(rows)
+    for i,(r,name,fed,col,pw) in enumerate(rows):
+        y=y0+i*rh; mine=(name.endswith("(你)"))
+        panel(60,y,W-60,y+rh-8,(39,196,106,60) if mine else (16,24,38,200),r=10)
+        txt(96,y+rh//2-2,r,22,col,anchor="mm")
+        d.ellipse([130,y+8,130+rh-24,y+rh-16],fill=col);
+        txt(150+rh,y+rh//2-2,name+"  ["+fed+"]",18,(235,242,250,255),anchor="lm")
+        txt(W-96,y+rh//2-2,pw,18,GOLD,anchor="rm")
+
+elif mode=="rally":
+    d.rectangle([0,0,W,H],fill=(6,10,18,150))
+    px0,py0,px1,py1=W//2-300,70,W//2+300,H-70
+    panel(px0,py0,px1,py1,(14,22,36,240),r=18)
+    txt(W//2,py0+30,"联盟集结 · 攻打 温布利球场据点(Lv.6)",18,(255,225,150,255),anchor="mm")
+    txt(px0+30,py0+70,"目标:中立强据点  防御 8.2M",15,(190,205,220,255))
+    txt(px0+30,py0+98,"集结出发倒计时  00:42",15,(255,160,120,255))
+    # troop slots
+    for i in range(6):
+        cx=px0+70+i*92; cy=py0+160
+        d.ellipse([cx-30,cy-30,cx+30,cy+30],fill=(24,34,50,255),outline=(120,170,220,160),width=2)
+        if i<3: d.ellipse([cx-26,cy-26,cx+26,cy+26],fill=(39,196,106,200)); txt(cx,cy,"队"+str(i+1),13,(255,255,255,255),anchor="mm")
+        else: txt(cx,cy,"+",26,(150,180,210,255),anchor="mm")
+    txt(px0+30,py0+220,"已集结 3 / 6 支球队大巴",15,(190,205,220,255))
+    panel(W//2-150,py1-66,W//2-8,py1-22,(39,196,106,255),r=16); txt((W//2-150+W//2-8)//2,py1-44,"加入集结",18,(255,255,255,255),anchor="mm")
+    panel(W//2+8,py1-66,W//2+150,py1-22,(246,183,60,255),r=16); txt((W//2+8+W//2+150)//2,py1-44,"发起集结",18,(90,60,0,255),anchor="mm")
+
 out = Image.alpha_composite(img,ov).convert("RGB"); out.save(out_path,quality=92); print("saved",out_path,out.size)
