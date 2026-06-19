@@ -15,26 +15,26 @@ OUT = pathlib.Path("docs/design/art/generated"); OUT.mkdir(parents=True, exist_o
 
 PREFIX = ""  # 每个场景自带完整提示词(角色与地图风格不同)
 
-CHAR = ("premium 3D caricature of a football star, head MODESTLY enlarged (subtle caricature, about "
-        "5.5 heads tall, NOT extreme bobblehead, NOT chibi, NOT a child), realistic detailed adult "
-        "face, skin and hair, realistic athletic adult body and football kit, photoreal stadium "
-        "background, Unreal Engine 5, 4k, confident mature expression. ")
+CHAR = ("realistic 3D football game character, EA Sports FC / eFootball style, almost realistic "
+        "proportions with only a SUBTLY enlarged head — about 6.5 heads tall, just a little bigger "
+        "than realistic for charm and readability, realistic adult face, skin, hair and kit, "
+        "photoreal stadium background, Unreal Engine 5, 4k. NOT a caricature, NOT a bobblehead, "
+        "NOT chibi, the head is only slightly larger than normal. ")
 
-MAP = ("mobile MMO 4X SLG world map gameplay screenshot, Last War Survival and Whiteout Survival "
-       "style, 3/4 top-down stylized terrain, MANY individual player bases each as a small football "
-       "stadium / club base with a floating name label, alliance tag and coordinates above it "
-       "(simulating many other online players), colored alliance territory regions, dotted march "
-       "lines with team-bus and troop icons moving between bases, football resource and event tiles; "
-       "full mobile game UI chrome: top resource bar with currency icons and numbers, player avatar "
-       "top-left, bottom navigation bar with menu buttons, side floating alliance/event/march "
-       "buttons, chat box bottom-left, minimap bottom-right; football themed, realistic-stylized 3D, "
-       "4k, authentic in-game screenshot. ")
+MAP = ("top-down 3/4 SLG strategy world map terrain, Last War Survival and Whiteout Survival style, "
+       "an OUTDOOR world map of green grassland with roads, rivers, forests and rocky regions; many "
+       "separate player bases scattered across the land with spacing, EACH base built as a small "
+       "fortified football club with its own little stadium and walls; colored alliance territory "
+       "ground tints, a larger central fortress stadium to contest. This is an outdoor strategic "
+       "world map terrain, NOT one giant football pitch, there is no big soccer field, bases sit on "
+       "grassland. Clean render with NO text and NO UI (UI added later), realistic-stylized 3D, "
+       "top-down strategic camera, 4k. ")
 
 SCENES = [
- ("char-messi", "portrait_16_9", CHAR + "the football star is Lionel Messi, recognizable likeness: relatively short, short light beard, brown hair, generic light-blue and white striped kit, full body confident standing pose, player showcase screen"),
- ("char-zidane", "portrait_16_9", CHAR + "the football legend is Zinedine Zidane, recognizable likeness: bald head, mature composed face, tall elegant build, generic all-white kit, full body standing pose, player showcase screen. IMPORTANT keep the head only slightly enlarged, about 6 heads tall, subtle caricature, do not make the head too big"),
- ("map-01-world", "landscape_16_9", MAP + "wide world map view with many player stadium bases and floating name/alliance labels spread over real-world style terrain, alliance territories, marches, a central championship stadium fortress contested by alliances"),
- ("map-02-war", "landscape_16_9", MAP + "zoomed-in alliance war scene, several alliance-colored teams marching to siege an enemy stadium fortress, many surrounding player bases with name labels, rally arrows and march lines, battle number popups"),
+ ("char-messi", "portrait_16_9", CHAR + "the player is Lionel Messi, recognizable likeness: relatively short, short light beard, brown hair, generic light-blue and white striped kit, full body confident standing pose on the pitch, player showcase"),
+ ("char-zidane", "portrait_16_9", CHAR + "the player is Zinedine Zidane, recognizable likeness: bald head, mature composed face, tall elegant build, generic all-white kit, full body standing pose on the pitch, player showcase"),
+ ("map-terrain", "landscape_16_9", MAP + "wide view showing dozens of small stadium club bases dotted across grassland and rivers, alliance territory color tints, a central championship fortress stadium, roads and march paths between bases"),
+ ("char-proto", "portrait_16_9", "realistic 3D football game player render, EA Sports FC / eFootball style, a generic adult male striker in a plain red and white kit, photoreal skin and stadium. The body has fully realistic proportions and the head is ONLY about 10 percent larger than normal (roughly 6 heads tall) — a very subtle stylization, clearly NOT a bobblehead, NOT a caricature, NOT chibi, just a slightly larger head on a realistic body. Full body standing pose, 4k"),
 ]
 
 def gen(name, size, scene):
