@@ -18,8 +18,10 @@
 - 🚧 球物理 + 带球手感 — 设计批准;**C++ 已实现**(MatchBall/Footballer),待引擎内体感验收+调参
 - 🚧 射门 / 传球 — C++ 已实现(Shoot 起弧 / Pass 平传),待验收
 - 🚧 进球判定 + 比分/计时 HUD — C++ 已实现(GoalZone + MatchGameMode + MatchHUD 纯代码HUD),待验收
-- 🚧 对手 AI(灰盒) — C++ 已实现(BotFootballer 追球+踢门),待验收
-- ⬜ 队友 AI / 标准 11v11 / 越位等完整规则(Phase 1 继续)
+- 🚧 队友+对手 AI + 阵型 + 抢断 + 出界 — C++ 已实现(BotFootballer 分队/站位/上抢,MatchGameMode 生成阵型+出界回中),待验收
+- 🚧 触屏虚拟摇杆+按钮 — C++ 已实现(Footballer 触屏 + MatchHUD 绘制),待验收
+- 🚧 球员属性 DataTable + 养成影响比赛 + 赛后结算 — C++ 已实现(FootballerStatsRow + DT_FootballerStats.csv + ApplyStats + EndMatch 结算 Funds/转会点),待验收
+- ⬜ 标准 11v11 / 越位等完整规则 / 动画 / 接 SLG 完整元层(Phase 1+ 继续)
 
 ## 3. 元层(MetaLayer / SLG)
 - ⬜ 俱乐部基地

@@ -31,8 +31,23 @@
 
 ## 一场比赛感(已含)
 - **比分/计时 HUD**(`MatchHUD`,纯 C++ 画在屏幕,无需 UMG 资源)
-- **对手 AI**(`BotFootballer`):追球→靠近把球踢向目标球门(在其 Details 里设 `TargetGoal` 对准你的球门位置)
+- **队友 + 对手 AI**(`BotFootballer`,分主/客队):球近上抢、抢到球踢向对方门,球远回阵型站位;`MatchGameMode` 按阵型生成 3 名队友 + 5 名对手
 - **进球判定 + 回中**(`GoalZone` + `MatchGameMode`)
+- **出界回中**(球越边线/端线 → 回中开球;边界用 `HalfLength/HalfWidth` 调)
+- **赛后结算**(到 `MatchDuration` 秒 → FULL TIME,按胜/平/负产出 Funds + 转会点,接经济设计)
+- **触屏虚拟摇杆 + 按钮**(左半屏拖动移动,右下射门/传/冲)
+
+## 球员属性 DataTable(养成→影响比赛)
+1. 把 `Data/DT_FootballerStats.csv` 拖进编辑器 Content(建议 `Content/Data/`),导入时:
+   - Import As → **DataTable**,Row Struct 选 **FootballerStatsRow**。
+2. 选中场景里的 **MatchGameMode**(或在 World Settings 的 GameMode 实例)Details:
+   - **StatsTable** 指向刚导入的 DT;**PlayerRowName** 填 `messi`/`zidane`/`ronaldo`/`generic`。
+3. Play 时玩家球员会按该球员属性改写手感(速度/盘带触球/射门/传球力度)——**养成→影响比赛**跑通。
+   - 数值映射见 `Footballer::ApplyStats()`,可继续细化。
+
+## 移动端/触屏测试
+- 编辑器测试触屏:Project Settings → Engine - Input 勾选 **Use Mouse for Touch**(或在设备上运行)。
+- 触屏:左半屏拖动=移动/带球;右下三键=射门/传/冲。
 
 ## 调手感(无需改代码)
 选中场景里的 Footballer(或打开其蓝图/默认),在 Details 的 **Feel** 分类里实时调:

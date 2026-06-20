@@ -1,18 +1,19 @@
 #include "Footballer.h"
 #include "MatchBall.h"
+#include "MatchGameMode.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/StaticMeshComponent.h"
-#include "Components/CapsuleComponent.h"
 #include "UObject/ConstructorHelpers.h"
-#include "EngineUtils.h" // TActorIterator
+#include "Engine/Engine.h"
+#include "Engine/GameViewportClient.h"
+#include "EngineUtils.h"
 
 AFootballer::AFootballer()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	// 朝向跟随移动方向(eFootball 式),控制器不强制朝向
 	bUseControllerRotationYaw = false;
 	UCharacterMovementComponent* Move = GetCharacterMovement();
 	Move->bOrientRotationToMovement = true;
@@ -20,7 +21,6 @@ AFootballer::AFootballer()
 	Move->MaxWalkSpeed = WalkSpeed;
 	Move->BrakingDecelerationWalking = 2048.f;
 
-	// 跟随镜头(球员身后上方,带滞后做平滑)
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	SpringArm->SetupAttachment(RootComponent);
 	SpringArm->TargetArmLength = 650.f;
@@ -37,7 +37,6 @@ AFootballer::AFootballer()
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(SpringArm);
 
-	// 占位身体网格(灰盒,后续换卡通/写实角色)
 	VisMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("VisMesh"));
 	VisMesh->SetupAttachment(RootComponent);
 	VisMesh->SetRelativeLocation(FVector(0.f, 0.f, -90.f));
@@ -54,17 +53,45 @@ void AFootballer::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// 找到场景里的球(灰盒:取第一个 AMatchBall)
 	for (TActorIterator<AMatchBall> It(GetWorld()); It; ++It)
 	{
 		Ball = *It;
 		break;
+	}
+
+	// 养成→影响比赛:从 GameMode 的 DataTable 取本玩家球员属性并应用
+	if (AMatchGameMode* GM = GetWorld() ? GetWorld()->GetAuthGameMode<AMatchGameMode>() : nullptr)
+	{
+		GM->ApplyStatsToPlayer(this);
+	}
+}
+
+void AFootballer::ApplyStats(const FFootballerStatsRow& Row)
+{
+	FootballerName = Row.DisplayName;
+	WalkSpeed = 450.f + Row.Pace * 2.0f;
+	SprintSpeed = 800.f + Row.Pace * 4.0f;
+	ControlRadius = 130.f + Row.Dribbling * 0.5f;
+	WalkTouchInterval = FMath::Lerp(0.18f, 0.10f, Row.Dribbling / 100.f);
+	SprintTouchInterval = FMath::Lerp(0.22f, 0.14f, Row.Dribbling / 100.f);
+	ShootSpeed = 1200.f + Row.Shooting * 8.0f;
+	PassSpeed = 650.f + Row.Passing * 5.0f;
+	if (UCharacterMovementComponent* Move = GetCharacterMovement())
+	{
+		Move->MaxWalkSpeed = WalkSpeed;
 	}
 }
 
 void AFootballer::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
+
+	// 触屏摇杆 → 移动(世界坐标:屏幕上=前进=+X)
+	if (bJoyActive && !JoyVec.IsNearlyZero())
+	{
+		AddMovementInput(FVector::ForwardVector, -JoyVec.Y);
+		AddMovementInput(FVector::RightVector, JoyVec.X);
+	}
 
 	if (DribbleCooldown > 0.f)
 	{
@@ -75,15 +102,11 @@ void AFootballer::Tick(float DeltaSeconds)
 		return;
 	}
 
-	// 带球:移动中且球在控球半径内 → 周期性给球向前的触球推力。
-	// 冲刺时推力更大 → 球被推远 → 控球变松(风险回报)。
 	const float Speed2D = GetVelocity().Size2D();
 	FVector Fwd = GetActorForwardVector();
 	Fwd.Z = 0.f;
 	Fwd.Normalize();
-
-	const FVector ToBall = Ball->GetActorLocation() - GetActorLocation();
-	const float Dist2D = ToBall.Size2D();
+	const float Dist2D = (Ball->GetActorLocation() - GetActorLocation()).Size2D();
 
 	if (Speed2D > 20.f && Dist2D < ControlRadius && DribbleCooldown <= 0.f)
 	{
@@ -102,13 +125,17 @@ void AFootballer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &AFootballer::StopSprint);
 	PlayerInputComponent->BindAction("Shoot", IE_Pressed, this, &AFootballer::Shoot);
 	PlayerInputComponent->BindAction("Pass", IE_Pressed, this, &AFootballer::Pass);
+
+	PlayerInputComponent->BindTouch(IE_Pressed, this, &AFootballer::OnTouchPressed);
+	PlayerInputComponent->BindTouch(IE_Repeat, this, &AFootballer::OnTouchMoved);
+	PlayerInputComponent->BindTouch(IE_Released, this, &AFootballer::OnTouchReleased);
 }
 
 void AFootballer::MoveForward(float Value)
 {
 	if (FMath::Abs(Value) > KINDA_SMALL_NUMBER)
 	{
-		AddMovementInput(FVector::ForwardVector, Value); // 世界坐标:前=+X
+		AddMovementInput(FVector::ForwardVector, Value);
 	}
 }
 
@@ -134,10 +161,7 @@ void AFootballer::StopSprint()
 
 void AFootballer::Shoot()
 {
-	if (!Ball)
-	{
-		return;
-	}
+	if (!Ball) { return; }
 	const float Dist2D = (Ball->GetActorLocation() - GetActorLocation()).Size2D();
 	if (Dist2D < ControlRadius + 60.f)
 	{
@@ -150,16 +174,74 @@ void AFootballer::Shoot()
 
 void AFootballer::Pass()
 {
-	if (!Ball)
-	{
-		return;
-	}
+	if (!Ball) { return; }
 	const float Dist2D = (Ball->GetActorLocation() - GetActorLocation()).Size2D();
 	if (Dist2D < ControlRadius + 60.f)
 	{
 		FVector Fwd = GetActorForwardVector();
 		Fwd.Z = 0.f;
 		Fwd.Normalize();
-		Ball->Kick(Fwd * PassSpeed + FVector(0.f, 0.f, 120.f)); // 平传略带上抬
+		Ball->Kick(Fwd * PassSpeed + FVector(0.f, 0.f, 120.f));
+	}
+}
+
+void AFootballer::GetViewport(float& OutW, float& OutH) const
+{
+	FVector2D VP(1920.f, 1080.f);
+	if (GEngine && GEngine->GameViewport)
+	{
+		GEngine->GameViewport->GetViewportSize(VP);
+	}
+	OutW = VP.X;
+	OutH = VP.Y;
+}
+
+void AFootballer::OnTouchPressed(ETouchIndex::Type Finger, FVector Location)
+{
+	float W, H; GetViewport(W, H);
+	const FVector2D P(Location.X, Location.Y);
+
+	// 左半屏 = 虚拟摇杆
+	if (P.X < W * 0.5f && !bJoyActive)
+	{
+		bJoyActive = true;
+		JoyFinger = (int32)Finger;
+		JoyStart = P;
+		JoyVec = FVector2D::ZeroVector;
+		return;
+	}
+	// 右侧按钮:射门 / 传球 / 冲刺
+	const FVector2D ShootC(W - 130.f, H - 130.f);
+	const FVector2D PassC(W - 250.f, H - 110.f);
+	const FVector2D SprintC(W - 170.f, H - 250.f);
+	if (FVector2D::Distance(P, ShootC) < 70.f) { Shoot(); }
+	else if (FVector2D::Distance(P, PassC) < 55.f) { Pass(); }
+	else if (FVector2D::Distance(P, SprintC) < 55.f) { StartSprint(); SprintFinger = (int32)Finger; }
+}
+
+void AFootballer::OnTouchMoved(ETouchIndex::Type Finger, FVector Location)
+{
+	if (bJoyActive && (int32)Finger == JoyFinger)
+	{
+		FVector2D D(Location.X - JoyStart.X, Location.Y - JoyStart.Y);
+		const float MaxR = 90.f;
+		const float M = D.Size();
+		if (M > MaxR) { D *= MaxR / M; }
+		JoyVec = D / MaxR;
+	}
+}
+
+void AFootballer::OnTouchReleased(ETouchIndex::Type Finger, FVector Location)
+{
+	if ((int32)Finger == JoyFinger)
+	{
+		bJoyActive = false;
+		JoyFinger = -1;
+		JoyVec = FVector2D::ZeroVector;
+	}
+	if ((int32)Finger == SprintFinger)
+	{
+		StopSprint();
+		SprintFinger = -1;
 	}
 }
