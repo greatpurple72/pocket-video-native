@@ -29,3 +29,4 @@
 - 产出 PV 制作包 docs/design/art/pv-seedance-prompts.md(SeeDance 2.0 图生视频):14镜分镜表(每镜=参考首帧+运镜提示词+字幕)+剪辑/音乐/字幕/导出指引+一致性技巧,目标75-90s领导审核版。补生成PV首帧:pv-title/pv-celebration/pv-penalty/pv-skill/pv-squad。
 - UE 工程落地(Phase 0 起步代码,云端可写部分):game/FootballSLG/ —— UE5 C++ 工程脚手架(.uproject/Target/Build,MatchBall 物理球、Footballer 可控带球+冲刺控球变松+射门起弧+跟随镜头、MatchGameMode),Config(Engine/Input/Game)、.gitignore、.gitattributes(LFS)、README(本地编译/建关卡/调参)、game/CLAUDE.md。手感参数全 EditAnywhere。待本地 UE5 编译+建关卡+体感验收。更新 STATE。
 - UE 工程继续落地(灰盒升级到"一场比赛感"):新增 MatchHUD(纯C++画比分/计时/操作提示,免UMG)、GoalZone(球门触发进球判定)、BotFootballer(追球对手AI),MatchGameMode 加比分/计时/进球回中/生成对手;Footballer 加传球(E/○)。更新 DefaultInput(Pass)、README(球门/对手/HUD/操作)、STATE。待本地编译验收。
+- UE Phase 1 续:赛季循环+俱乐部持久化。新增 FootballGameInstance(跨场存资金/转会点/场次/联赛积分/胜平负);MatchGameMode 难度随场次递增、生成双方守门员、赛后写入GI;Footballer 加 NextMatch(Enter/Start 一键下一场,重载关卡);BotFootballer 远射改推进传球;MatchHUD 顶部显示赛季信息。配置 GameInstanceClass、NextMatch 输入。更新 README/STATE。

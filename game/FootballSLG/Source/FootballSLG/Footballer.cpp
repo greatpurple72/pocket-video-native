@@ -8,6 +8,8 @@
 #include "UObject/ConstructorHelpers.h"
 #include "Engine/Engine.h"
 #include "Engine/GameViewportClient.h"
+#include "Kismet/GameplayStatics.h"
+#include "FootballGameInstance.h"
 #include "EngineUtils.h"
 
 AFootballer::AFootballer()
@@ -125,6 +127,7 @@ void AFootballer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &AFootballer::StopSprint);
 	PlayerInputComponent->BindAction("Shoot", IE_Pressed, this, &AFootballer::Shoot);
 	PlayerInputComponent->BindAction("Pass", IE_Pressed, this, &AFootballer::Pass);
+	PlayerInputComponent->BindAction("NextMatch", IE_Pressed, this, &AFootballer::NextMatch);
 
 	PlayerInputComponent->BindTouch(IE_Pressed, this, &AFootballer::OnTouchPressed);
 	PlayerInputComponent->BindTouch(IE_Repeat, this, &AFootballer::OnTouchMoved);
@@ -183,6 +186,17 @@ void AFootballer::Pass()
 		Fwd.Normalize();
 		Ball->Kick(Fwd * PassSpeed + FVector(0.f, 0.f, 120.f));
 	}
+}
+
+void AFootballer::NextMatch()
+{
+	AMatchGameMode* GM = GetWorld() ? GetWorld()->GetAuthGameMode<AMatchGameMode>() : nullptr;
+	if (!GM || !GM->bEnded) { return; }
+	if (UFootballGameInstance* GI = GetWorld()->GetGameInstance<UFootballGameInstance>())
+	{
+		GI->AdvanceMatch();
+	}
+	UGameplayStatics::OpenLevel(this, FName(*UGameplayStatics::GetCurrentLevelName(this)));
 }
 
 void AFootballer::GetViewport(float& OutW, float& OutH) const

@@ -1,6 +1,7 @@
 #include "MatchHUD.h"
 #include "MatchGameMode.h"
 #include "Footballer.h"
+#include "FootballGameInstance.h"
 #include "Engine/Canvas.h"
 #include "Engine/Engine.h"
 #include "GameFramework/PlayerController.h"
@@ -32,7 +33,15 @@ void AMatchHUD::DrawHUD()
 		}
 	}
 
-	DrawText(TEXT("WASD/Stick move  Shift/RT sprint  Space shoot  E pass"),
+	// 赛季信息(俱乐部持久化)
+	if (UFootballGameInstance* GI = GetGameInstance() ? Cast<UFootballGameInstance>(GetGameInstance()) : nullptr)
+	{
+		const FString Season = FString::Printf(TEXT("赛季 第%d场  |  积分 %d  |  资金 %d  |  转会点 %d  (%d胜 %d平 %d负)"),
+			GI->MatchIndex + 1, GI->LeaguePoints, GI->Funds, GI->TransferPoints, GI->Wins, GI->Draws, GI->Losses);
+		DrawText(Season, FLinearColor(0.8f, 0.9f, 1.f), 20.f, 18.f, Small, 1.0f);
+	}
+
+	DrawText(TEXT("WASD/Stick move  Shift/RT sprint  Space shoot  E pass  Enter next-match"),
 		FLinearColor(0.85f, 0.93f, 1.f), 20.f, H - 28.f, Small, 1.0f);
 
 	// —— 触屏虚拟摇杆 + 按钮(读玩家球员状态)——

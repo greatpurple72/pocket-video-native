@@ -51,11 +51,13 @@ void ABotFootballer::Tick(float DeltaSeconds)
 		}
 		else if (KickCooldown <= 0.f)
 		{
-			// 抢到/触球 → 踢向目标门(等于把球从对方脚下断走)
+			// 抢到/触球 → 踢向目标门;离门远=小力推进(像传球),离门近=大力射门
 			FVector ToGoal = TargetGoal - Ball->GetActorLocation();
 			ToGoal.Z = 0.f;
+			const float DistToGoal = ToGoal.Size();
 			ToGoal.Normalize();
-			Ball->Kick(ToGoal * KickPower + FVector(0.f, 0.f, 200.f));
+			const float Power = (DistToGoal > 1300.f) ? KickPower * 0.6f : KickPower;
+			Ball->Kick(ToGoal * Power + FVector(0.f, 0.f, 180.f));
 			KickCooldown = 0.7f;
 		}
 	}

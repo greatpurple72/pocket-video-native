@@ -21,7 +21,8 @@
 - 🚧 队友+对手 AI + 阵型 + 抢断 + 出界 — C++ 已实现(BotFootballer 分队/站位/上抢,MatchGameMode 生成阵型+出界回中),待验收
 - 🚧 触屏虚拟摇杆+按钮 — C++ 已实现(Footballer 触屏 + MatchHUD 绘制),待验收
 - 🚧 球员属性 DataTable + 养成影响比赛 + 赛后结算 — C++ 已实现(FootballerStatsRow + DT_FootballerStats.csv + ApplyStats + EndMatch 结算 Funds/转会点),待验收
-- ⬜ 标准 11v11 / 越位等完整规则 / 动画 / 接 SLG 完整元层(Phase 1+ 继续)
+- 🚧 赛季循环 + 俱乐部持久化 — C++ 已实现(FootballGameInstance 跨场存资金/转会点/积分/战绩;难度随场次升;守门员;Enter 下一场),待验收
+- ⬜ 标准 11v11 / 越位等完整规则 / 动画(Mixamo)/ 接 SLG 完整元层 UI(Phase 1+ 继续)
 
 ## 3. 元层(MetaLayer / SLG)
 - ⬜ 俱乐部基地

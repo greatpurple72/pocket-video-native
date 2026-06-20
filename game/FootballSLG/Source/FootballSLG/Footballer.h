@@ -73,6 +73,7 @@ private:
 	void StopSprint();
 	void Shoot();
 	void Pass();
+	void NextMatch();
 
 	void OnTouchPressed(ETouchIndex::Type Finger, FVector Location);
 	void OnTouchMoved(ETouchIndex::Type Finger, FVector Location);
