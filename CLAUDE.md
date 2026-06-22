@@ -47,4 +47,6 @@
 - **下一步**:下一个 PrevizGate = **球物理 + 带球手感**;并行创建独立 UE5 工程仓库(`docs/ue-project/SETUP.md`)。
 - **当前定位**:街机/休闲向、全球、卡通画风、实时可控足球 SLG。
 
+> ⚠️ 注:美术方向后续已改为**写实+头略大**(ADR-0005 取代 ADR-0004);UE 灰盒已写到 Phase 1(`game/FootballSLG/`,待本地编译)。**交接到本地见 `docs/progress/session-log/2026-06-19-handoff-to-local.md`**。详细实时状态以 `docs/progress/STATE.md` 为准。
+
 > 详细实时状态以 `docs/progress/STATE.md` 为准,本节仅为速览。
