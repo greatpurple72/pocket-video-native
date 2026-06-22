@@ -31,3 +31,4 @@
 - UE 工程继续落地(灰盒升级到"一场比赛感"):新增 MatchHUD(纯C++画比分/计时/操作提示,免UMG)、GoalZone(球门触发进球判定)、BotFootballer(追球对手AI),MatchGameMode 加比分/计时/进球回中/生成对手;Footballer 加传球(E/○)。更新 DefaultInput(Pass)、README(球门/对手/HUD/操作)、STATE。待本地编译验收。
 - UE Phase 1 续:赛季循环+俱乐部持久化。新增 FootballGameInstance(跨场存资金/转会点/场次/联赛积分/胜平负);MatchGameMode 难度随场次递增、生成双方守门员、赛后写入GI;Footballer 加 NextMatch(Enter/Start 一键下一场,重载关卡);BotFootballer 远射改推进传球;MatchHUD 顶部显示赛季信息。配置 GameInstanceClass、NextMatch 输入。更新 README/STATE。
 - 交接到本地:新增 docs/progress/session-log/2026-06-19-handoff-to-local.md(克隆/切分支/编译/建关卡步骤 + 本地 Claude Code 首条指令)。CLAUDE.md 速览补充交接指引与 ADR-0005/UE 进度注记。
+- 新增根目录 START-HERE.md(一读就懂的项目总纲:是什么/两层结构/已锁定决策/现状/UE怎么跑/工作铁律/下一步/分支),CLAUDE.md 顶部指向它。供本地 Claude Code 新会话一读即接手。
