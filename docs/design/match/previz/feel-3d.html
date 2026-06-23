@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<title>足球 SLG · 3D 手感 Previz</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;background:#0b0f14;overflow:hidden;font-family:-apple-system,Segoe UI,Arial,sans-serif;touch-action:none;}
+  #c{display:block;width:100%;height:100%;}
+  #hud{position:fixed;top:8px;left:0;right:0;text-align:center;color:#fff;pointer-events:none;z-index:5;}
+  #score{font-size:30px;font-weight:800;text-shadow:0 2px 6px #000;}
+  #hint{font-size:12px;color:#9fe7bb;margin-top:2px;}
+  .badge{position:fixed;top:10px;right:10px;background:#10261a;color:#9fe7bb;font-size:10px;padding:4px 8px;border-radius:7px;border:1px solid #3fae6b;z-index:5;pointer-events:none;}
+  #joyzone{position:fixed;left:0;top:0;width:58%;height:100%;z-index:3;}
+  #joybase,#joyknob{position:fixed;border-radius:50%;z-index:4;pointer-events:none;display:none;}
+  #joybase{width:120px;height:120px;border:3px solid #ffffff55;margin:-60px 0 0 -60px;}
+  #joyknob{width:54px;height:54px;background:#3fae6bcc;margin:-27px 0 0 -27px;}
+  .btn{position:fixed;z-index:4;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;}
+  #sprint{right:150px;bottom:54px;width:74px;height:74px;background:#ff6b35cc;font-size:13px;}
+  #shoot{right:40px;bottom:80px;width:96px;height:96px;background:#1f6febcc;font-size:17px;}
+  .btn:active{filter:brightness(1.4);}
+  #loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;color:#9fe7bb;font-size:16px;z-index:9;background:#0b0f14;}
+  #panel{position:fixed;left:8px;right:8px;bottom:8px;background:#161b22ee;border:1px solid #2b333d;border-radius:12px;color:#cfd8dc;font-size:12px;padding:12px 14px;display:none;z-index:6;line-height:1.6;}
+  #panel b{color:#9fe7bb;}
+  #toggle{position:fixed;left:50%;bottom:8px;transform:translateX(-50%);background:#161b22cc;color:#8b97a6;border:1px solid #2b333d;border-radius:8px;padding:5px 10px;font-size:11px;z-index:6;}
+</style>
+</head>
+<body>
+<div id="loading">加载 3D 引擎中…</div>
+<canvas id="c"></canvas>
+<div id="hud"><div id="score">0</div><div id="hint">左侧拖动带球 · SPRINT 加速 · SHOOT 射门</div></div>
+<div class="badge">3D Previz · 卡通占位</div>
+<div id="joyzone"></div>
+<div id="joybase"></div><div id="joyknob"></div>
+<div id="sprint" class="btn">SPRINT</div>
+<div id="shoot" class="btn">SHOOT</div>
+<button id="toggle">说明 ▲</button>
+<div id="panel">
+<b>3D 手感 Previz(卡通占位模型)</b><br>
+· 跟随镜头在球员身后(eFootball 式)。<br>
+· 慢走球贴脚;<b>SPRINT</b> 把球推远(控球变松=风险)。<br>
+· 对准远端球门 <b>SHOOT</b>,球会起弧入网。<br>
+· 键盘:WASD/方向键移动,Shift 冲刺,空格射门。<br>
+<span style="color:#8b97a6">注:这是程序生成的卡通占位,验的是 3D 透视+镜头+手感方向,非 UE5 成片画质。</span>
+</div>
+<script src="https://unpkg.com/three@0.149.0/build/three.min.js"></script>
+<script>
+(function(){
+if(!window.THREE){document.getElementById('loading').textContent='3D 引擎加载失败,请检查网络后刷新';return;}
+const THREE=window.THREE;
+const cv=document.getElementById('c');
+const renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+renderer.setClearColor(0x87b6e8);
+const scene=new THREE.Scene();
+scene.fog=new THREE.Fog(0x87b6e8,120,260);
+const camera=new THREE.PerspectiveCamera(55,1,0.1,600);
+
+// lights
+scene.add(new THREE.HemisphereLight(0xffffff,0x3a5a40,1.0));
+const sun=new THREE.DirectionalLight(0xffffff,0.8); sun.position.set(40,80,30); scene.add(sun);
+
+// ---- pitch ----
+const PW=64, PL=104; // width x length
+function pitchTexture(){
+  const c=document.createElement('canvas'); c.width=640; c.height=1040; const x=c.getContext('2d');
+  // stripes
+  for(let i=0;i<13;i++){ x.fillStyle=(i%2===0)?'#2faa54':'#279a4a'; x.fillRect(0,i*80,640,80); }
+  x.strokeStyle='#eafff0'; x.lineWidth=5;
+  x.strokeRect(30,30,580,980);
+  x.beginPath(); x.moveTo(30,520); x.lineTo(610,520); x.stroke();
+  x.beginPath(); x.arc(320,520,80,0,7); x.stroke();
+  x.fillStyle='#eafff0'; x.beginPath(); x.arc(320,520,6,0,7); x.fill();
+  // penalty boxes
+  x.strokeRect(180,30,280,150); x.strokeRect(250,30,140,60);
+  x.strokeRect(180,860,280,150); x.strokeRect(250,950,140,60);
+  const t=new THREE.CanvasTexture(c); return t;
+}
+const pitch=new THREE.Mesh(new THREE.PlaneGeometry(PW,PL),new THREE.MeshLambertMaterial({map:pitchTexture()}));
+pitch.rotation.x=-Math.PI/2; scene.add(pitch);
+// surrounding darker ground
+const around=new THREE.Mesh(new THREE.PlaneGeometry(400,400),new THREE.MeshLambertMaterial({color:0x14532d}));
+around.rotation.x=-Math.PI/2; around.position.y=-0.05; scene.add(around);
+
+// ---- goals ----
+const GOAL_W=12, GOAL_H=4, POST=0.35;
+function makeGoal(z,dir){
+  const g=new THREE.Group(); const m=new THREE.MeshLambertMaterial({color:0xffffff});
+  const postGeo=new THREE.BoxGeometry(POST,GOAL_H,POST);
+  const l=new THREE.Mesh(postGeo,m); l.position.set(-GOAL_W/2,GOAL_H/2,0); g.add(l);
+  const r=new THREE.Mesh(postGeo,m); r.position.set(GOAL_W/2,GOAL_H/2,0); g.add(r);
+  const bar=new THREE.Mesh(new THREE.BoxGeometry(GOAL_W+POST,POST,POST),m); bar.position.set(0,GOAL_H,0); g.add(bar);
+  // net (simple translucent box)
+  const net=new THREE.Mesh(new THREE.BoxGeometry(GOAL_W,GOAL_H,2.4),new THREE.MeshLambertMaterial({color:0xffffff,transparent:true,opacity:0.12}));
+  net.position.set(0,GOAL_H/2,dir*1.2); g.add(net);
+  g.position.set(0,0,z); scene.add(g); return g;
+}
+makeGoal(-PL/2,-1); // target goal (attack -Z)
+makeGoal(PL/2,1);
+
+// ---- chibi player factory ----
+function makePlayer(kit){
+  const g=new THREE.Group();
+  const skin=0xffcc99;
+  const body=new THREE.Mesh(new THREE.CylinderGeometry(0.55,0.62,1.1,12),new THREE.MeshLambertMaterial({color:kit}));
+  body.position.y=1.15; g.add(body);
+  const head=new THREE.Mesh(new THREE.SphereGeometry(0.62,18,16),new THREE.MeshLambertMaterial({color:skin}));
+  head.position.y=2.15; g.add(head);
+  const hair=new THREE.Mesh(new THREE.SphereGeometry(0.64,18,12,0,Math.PI*2,0,Math.PI*0.6),new THREE.MeshLambertMaterial({color:0x3a2a1a}));
+  hair.position.y=2.2; g.add(hair);
+  const legGeo=new THREE.CylinderGeometry(0.2,0.18,0.85,10);
+  const legMat=new THREE.MeshLambertMaterial({color:0x222831});
+  const lL=new THREE.Mesh(legGeo,legMat); lL.position.set(-0.25,0.42,0); g.add(lL);
+  const rL=new THREE.Mesh(legGeo,legMat); rL.position.set(0.25,0.42,0); g.add(rL);
+  const armGeo=new THREE.CylinderGeometry(0.15,0.13,0.8,8);
+  const armMat=new THREE.MeshLambertMaterial({color:kit});
+  const lA=new THREE.Mesh(armGeo,armMat); lA.position.set(-0.7,1.2,0); g.add(lA);
+  const rA=new THREE.Mesh(armGeo,armMat); rA.position.set(0.7,1.2,0); g.add(rA);
+  // nose marker (facing)
+  const nose=new THREE.Mesh(new THREE.SphereGeometry(0.1,8,8),new THREE.MeshLambertMaterial({color:0x222831}));
+  nose.position.set(0,2.15,-0.6); g.add(nose);
+  g.userData={lL,rL,lA,rA};
+  scene.add(g); return g;
+}
+const player=makePlayer(0x27c46a);
+player.position.set(0,0,18);
+let facing=Math.PI; // looking -Z
+
+// ---- ball ----
+function ballTexture(){
+  const c=document.createElement('canvas'); c.width=128;c.height=128; const x=c.getContext('2d');
+  x.fillStyle='#ffffff'; x.fillRect(0,0,128,128);
+  x.fillStyle='#1b1f24';
+  for(let i=0;i<6;i++){ x.beginPath(); x.arc(20+ (i*22)%120, 20+((i*40)%100),9,0,7); x.fill(); }
+  return new THREE.CanvasTexture(c);
+}
+const BR=0.45;
+const ball=new THREE.Mesh(new THREE.SphereGeometry(BR,20,16),new THREE.MeshLambertMaterial({map:ballTexture()}));
+ball.position.set(0,BR,14); scene.add(ball);
+let bvel=new THREE.Vector3();
+
+// shadows (fake discs)
+function disc(){ const m=new THREE.Mesh(new THREE.CircleGeometry(0.7,18),new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:0.25})); m.rotation.x=-Math.PI/2; scene.add(m); return m;}
+const pShadow=disc(), bShadow=disc(); bShadow.scale.setScalar(0.6);
+
+// ---- input ----
+const keys={};
+addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true; if(e.key===' ')shoot();});
+addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
+let joyId=null, joyX=0, joyY=0, joySX=0, joySY=0;
+const jb=document.getElementById('joybase'), jk=document.getElementById('joyknob');
+const jz=document.getElementById('joyzone');
+function jStart(x,y,id){ joyId=id; joySX=x; joySY=y; jb.style.display=jk.style.display='block'; jb.style.left=jk.style.left=x+'px'; jb.style.top=jk.style.top=y+'px'; }
+function jMove(x,y){ let dx=x-joySX,dy=y-joySY; const mag=Math.hypot(dx,dy),max=56; if(mag>max){dx=dx/mag*max;dy=dy/mag*max;} joyX=dx/max; joyY=dy/max; jk.style.left=(joySX+dx)+'px'; jk.style.top=(joySY+dy)+'px'; }
+function jEnd(){ joyId=null; joyX=joyY=0; jb.style.display=jk.style.display='none'; }
+jz.addEventListener('touchstart',e=>{e.preventDefault(); if(joyId===null){const t=e.changedTouches[0]; jStart(t.clientX,t.clientY,t.identifier);}},{passive:false});
+addEventListener('touchmove',e=>{ for(const t of e.changedTouches){ if(t.identifier===joyId){ e.preventDefault(); jMove(t.clientX,t.clientY);} }},{passive:false});
+addEventListener('touchend',e=>{ for(const t of e.changedTouches){ if(t.identifier===joyId)jEnd(); }});
+addEventListener('touchcancel',e=>{ for(const t of e.changedTouches){ if(t.identifier===joyId)jEnd(); }});
+// mouse (desktop) on joyzone
+let mDown=false;
+jz.addEventListener('mousedown',e=>{mDown=true; jStart(e.clientX,e.clientY,'m');});
+addEventListener('mousemove',e=>{if(mDown)jMove(e.clientX,e.clientY);});
+addEventListener('mouseup',()=>{if(mDown){mDown=false;jEnd();}});
+// buttons
+let sprintHeld=false, sprintTid=null;
+const sb=document.getElementById('sprint'), shb=document.getElementById('shoot');
+sb.addEventListener('touchstart',e=>{e.preventDefault();sprintHeld=true;sprintTid=e.changedTouches[0].identifier;},{passive:false});
+addEventListener('touchend',e=>{for(const t of e.changedTouches){if(t.identifier===sprintTid){sprintHeld=false;sprintTid=null;}}});
+sb.addEventListener('mousedown',()=>sprintHeld=true); addEventListener('mouseup',()=>sprintHeld=false);
+shb.addEventListener('touchstart',e=>{e.preventDefault();shoot();},{passive:false});
+shb.addEventListener('mousedown',()=>shoot());
+function isSprint(){return sprintHeld||keys['shift'];}
+function inputVec(){
+  let x=0,y=0;
+  if(keys['a']||keys['arrowleft'])x-=1; if(keys['d']||keys['arrowright'])x+=1;
+  if(keys['w']||keys['arrowup'])y-=1; if(keys['s']||keys['arrowdown'])y+=1;
+  if(joyId!==null||mDown){x=joyX;y=joyY;}
+  const m=Math.hypot(x,y); if(m>1){x/=m;y/=m;} return {x,z:y,mag:Math.min(m,1)};
+}
+
+// ---- gameplay ----
+let score=0, touchT=0;
+const fwd=new THREE.Vector3();
+function shoot(){
+  const d=player.position.distanceTo(ball.position);
+  if(d<2.4){ fwd.set(Math.sin(facing),0,Math.cos(facing)); bvel.set(fwd.x*30,9,fwd.z*30); touchT=0.35; }
+}
+function resetBall(){ ball.position.set(0,BR,8); bvel.set(0,0,0); player.position.set(0,0,18); facing=Math.PI; }
+
+let last=performance.now();
+function loop(now){
+  let dt=(now-last)/1000; last=now; if(dt>0.04)dt=0.04;
+  const inp=inputVec();
+  const sp=isSprint()?13:6.5;
+  if(inp.mag>0.12){
+    player.position.x+=inp.x*sp*dt; player.position.z+=inp.z*sp*dt;
+    facing=Math.atan2(inp.x,inp.z);
+    // limbs anim
+    const t=now*0.012*(isSprint()?1.5:1); const amp=isSprint()?0.9:0.6;
+    player.userData.lL.rotation.x=Math.sin(t)*amp; player.userData.rL.rotation.x=-Math.sin(t)*amp;
+    player.userData.lA.rotation.x=-Math.sin(t)*amp*0.7; player.userData.rA.rotation.x=Math.sin(t)*amp*0.7;
+    player.position.y=Math.abs(Math.sin(t))*0.08;
+  } else {
+    player.userData.lL.rotation.x*=0.8; player.userData.rL.rotation.x*=0.8; player.position.y*=0.8;
+  }
+  player.position.x=Math.max(-PW/2+1,Math.min(PW/2-1,player.position.x));
+  player.position.z=Math.max(-PL/2-3,Math.min(PL/2-1,player.position.z));
+  player.rotation.y=facing;
+
+  // dribble
+  if(touchT>0)touchT-=dt;
+  const fx=Math.sin(facing), fz=Math.cos(facing);
+  const horiz=Math.hypot(ball.position.x-player.position.x, ball.position.z-player.position.z);
+  const grounded=ball.position.y<=BR+0.02;
+  if(grounded && horiz<2.2 && inp.mag>0.15 && touchT<=0){
+    const push=isSprint()?15:8;
+    bvel.x=fx*push; bvel.z=fz*push; bvel.y=Math.max(bvel.y,0);
+    touchT=isSprint()?0.16:0.13;
+  } else if(grounded && horiz<2.0 && inp.mag<=0.15){
+    const tx=player.position.x+fx*1.0, tz=player.position.z+fz*1.0;
+    ball.position.x+=(tx-ball.position.x)*0.2; ball.position.z+=(tz-ball.position.z)*0.2;
+    bvel.x*=0.6; bvel.z*=0.6;
+  }
+  // ball physics
+  bvel.y-=22*dt;
+  ball.position.x+=bvel.x*dt; ball.position.y+=bvel.y*dt; ball.position.z+=bvel.z*dt;
+  if(ball.position.y<BR){ ball.position.y=BR; bvel.y=-bvel.y*0.45; if(Math.abs(bvel.y)<1)bvel.y=0; bvel.x*=0.86; bvel.z*=0.86; }
+  // rolling
+  ball.rotation.x+=bvel.z*dt*1.6; ball.rotation.z-=bvel.x*dt*1.6;
+  // bounds
+  if(Math.abs(ball.position.x)>PW/2-BR){ ball.position.x=Math.sign(ball.position.x)*(PW/2-BR); bvel.x*=-0.4; }
+  // goal detection (target at z=-PL/2)
+  if(ball.position.z< -PL/2+0.3 && Math.abs(ball.position.x)<GOAL_W/2 && ball.position.y<GOAL_H){
+    score++; document.getElementById('score').textContent=score; renderer.setClearColor(0xffd23f);
+    setTimeout(()=>renderer.setClearColor(0x87b6e8),120); resetBall();
+  }
+  if(ball.position.z<-PL/2-3 || ball.position.z>PL/2+3){ resetBall(); }
+
+  // shadows
+  pShadow.position.set(player.position.x,0.02,player.position.z);
+  bShadow.position.set(ball.position.x,0.02,ball.position.z);
+
+  // camera follow (eFootball-style)
+  const camDist=11, camH=6, look=6;
+  const desired=new THREE.Vector3(player.position.x-fx*camDist, camH, player.position.z-fz*camDist);
+  camera.position.lerp(desired,1-Math.pow(0.0015,dt));
+  camera.lookAt(player.position.x+fx*look, 1.5, player.position.z+fz*look);
+
+  renderer.render(scene,camera);
+  requestAnimationFrame(loop);
+}
+
+function resize(){ const w=window.innerWidth,h=window.innerHeight; renderer.setSize(w,h,false); camera.aspect=w/h; camera.updateProjectionMatrix(); }
+addEventListener('resize',resize); resize();
+document.getElementById('loading').style.display='none';
+document.getElementById('toggle').addEventListener('click',()=>{const p=document.getElementById('panel');p.style.display=p.style.display==='block'?'none':'block';});
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

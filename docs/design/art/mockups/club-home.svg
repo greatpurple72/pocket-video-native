@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="1280" viewBox="0 0 720 1280" font-family="Segoe UI, Arial, sans-serif">
+<defs>
+<linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7fc7ff"/><stop offset="1" stop-color="#d6f0ff"/></linearGradient>
+<linearGradient id="grass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3fc46a"/><stop offset="1" stop-color="#2a9a52"/></linearGradient>
+<linearGradient id="gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe27a"/><stop offset="1" stop-color="#f6b73c"/></linearGradient>
+</defs>
+<rect width="720" height="1280" fill="url(#sky)"/>
+<rect y="780" width="720" height="500" fill="url(#grass)"/>
+
+<!-- top resource bar -->
+<rect x="0" y="0" width="720" height="96" fill="#0e1b2aee"/>
+<circle cx="56" cy="48" r="30" fill="#27c46a"/><text x="56" y="55" font-size="26" text-anchor="middle" fill="#fff">⚽</text>
+<rect x="92" y="30" width="120" height="36" rx="18" fill="#1b2a3a"/><text x="104" y="55" font-size="20" fill="#fff">Lv.27</text>
+<rect x="300" y="28" width="120" height="40" rx="20" fill="#13202e"/><text x="316" y="54" font-size="22" fill="#ffe27a">💰 12.4k</text>
+<rect x="430" y="28" width="120" height="40" rx="20" fill="#13202e"/><text x="446" y="54" font-size="22" fill="#8fd0ff">💎 860</text>
+<rect x="560" y="28" width="130" height="40" rx="20" fill="#13202e"/><text x="574" y="54" font-size="20" fill="#b6f5c8">🎯 320</text>
+
+<!-- stadium -->
+<ellipse cx="360" cy="560" rx="260" ry="120" fill="#e9f6ff"/>
+<ellipse cx="360" cy="540" rx="210" ry="92" fill="url(#grass)"/>
+<rect x="300" y="500" width="120" height="80" rx="8" fill="#1f8f4e" stroke="#eafff0" stroke-width="3"/>
+<circle cx="360" cy="540" r="34" fill="none" stroke="#eafff0" stroke-width="3"/>
+<path d="M150 560 q210 -150 420 0" fill="none" stroke="#ffffff" stroke-width="6" opacity="0.4"/>
+<text x="360" y="430" font-size="30" font-weight="800" text-anchor="middle" fill="#0e1b2a">⭐ 你的主场球场 ⭐</text>
+
+<!-- buildings (cartoon iso) -->
+<g>
+<rect x="80" y="840" width="150" height="120" rx="14" fill="#ff8c5a"/><rect x="80" y="840" width="150" height="34" rx="14" fill="#ffb38c"/><text x="155" y="915" font-size="22" text-anchor="middle" fill="#fff">训练中心</text>
+<rect x="285" y="860" width="150" height="120" rx="14" fill="#5aa0ff"/><rect x="285" y="860" width="150" height="34" rx="14" fill="#8fc0ff"/><text x="360" y="935" font-size="22" text-anchor="middle" fill="#fff">青训营</text>
+<rect x="490" y="840" width="150" height="120" rx="14" fill="#b06bff"/><rect x="490" y="840" width="150" height="34" rx="14" fill="#cba0ff"/><text x="565" y="915" font-size="22" text-anchor="middle" fill="#fff">商业区</text>
+</g>
+
+<!-- play button -->
+<rect x="160" y="1010" width="400" height="92" rx="46" fill="url(#gold)"/>
+<text x="360" y="1070" font-size="40" font-weight="900" text-anchor="middle" fill="#5a3a00">▶ 开始比赛</text>
+
+<!-- bottom nav -->
+<rect x="0" y="1140" width="720" height="140" fill="#0e1b2af2"/>
+<g font-size="20" fill="#cfe3f5" text-anchor="middle">
+<text x="80" y="1200">⚔️</text><text x="80" y="1232">比赛</text>
+<text x="232" y="1200">👥</text><text x="232" y="1232">阵容</text>
+<text x="384" y="1200">🏟️</text><text x="384" y="1232">俱乐部</text>
+<text x="536" y="1200">🤝</text><text x="536" y="1232">联盟</text>
+<text x="664" y="1200">🛒</text><text x="664" y="1232">商店</text>
+</g>
+</svg>

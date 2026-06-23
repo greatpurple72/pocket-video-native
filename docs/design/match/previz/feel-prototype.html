@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<title>足球 SLG · 手感 Previz</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-user-select:none; user-select:none; -webkit-tap-highlight-color:transparent; }
+  html,body { height:100%; background:#0e1116; overflow:hidden; font-family:-apple-system,Segoe UI,Arial,sans-serif; touch-action:none; }
+  #wrap { position:fixed; inset:0; }
+  canvas { display:block; width:100%; height:100%; }
+  #hud { position:fixed; top:10px; left:0; right:0; text-align:center; color:#fff; pointer-events:none; }
+  #score { font-size:30px; font-weight:800; text-shadow:0 2px 6px #000; }
+  #hint { font-size:13px; color:#9fe7bb; margin-top:2px; }
+  .badge { position:fixed; top:12px; right:12px; background:#10261a; color:#9fe7bb; font-size:11px;
+           padding:5px 9px; border-radius:8px; border:1px solid #3fae6b; pointer-events:none; }
+  #flash { position:fixed; inset:0; background:#ffd23f; opacity:0; pointer-events:none; }
+  #toggle { position:fixed; bottom:12px; left:50%; transform:translateX(-50%); background:#161b22; color:#8b97a6;
+            border:1px solid #2b333d; border-radius:8px; padding:6px 12px; font-size:12px; }
+  #panel { position:fixed; inset:auto 10px 56px 10px; background:#161b22ee; border:1px solid #2b333d; border-radius:12px;
+           color:#cfd8dc; font-size:13px; padding:14px 16px; display:none; line-height:1.7; }
+  #panel b { color:#9fe7bb; }
+</style>
+</head>
+<body>
+<div id="wrap"><canvas id="c"></canvas></div>
+<div id="hud"><div id="score">0</div><div id="hint">左侧拖动带球 · 右下 SPRINT 加速 · SHOOT 射门</div></div>
+<div class="badge">手感 Previz · 2D 近似</div>
+<div id="flash"></div>
+<button id="toggle">验收要点 ▲</button>
+<div id="panel">
+  <b>体验这几点(手感及格线):</b><br>
+  1. 慢走时球<b>贴脚</b>,跟手。<br>
+  2. 按住 <b>SPRINT</b> 带球,球被<b>推远一步</b>——控球变松(风险感)。<br>
+  3. 突然反向拖摇杆=<b>急停变向</b>,球回贴脚。<br>
+  4. 对准球门 <b>SHOOT</b>,入网有爽点。<br>
+  5. 关键:你会不会<b>想再多踢两下</b>?<br>
+  <span style="color:#8b97a6">键盘也可:WASD/方向键移动,Shift 冲刺,空格射门。</span>
+</div>
+<script>
+const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+let W=0,H=0,DPR=Math.min(window.devicePixelRatio||1,2);
+function resize(){ W=window.innerWidth; H=window.innerHeight; cv.width=W*DPR; cv.height=H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0); layout(); }
+window.addEventListener('resize',resize);
+
+// pitch geometry (portrait: attack upward)
+let pitch, goal;
+function layout(){
+  const m=Math.min(W*0.06,28);
+  pitch={x:m,y:m,w:W-2*m,h:H-2*m};
+  const gw=Math.min(pitch.w*0.34,170);
+  goal={x:pitch.x+pitch.w/2-gw/2, y:pitch.y, w:gw, h:10};
+}
+
+const player={x:0,y:0,r:14,vx:0,vy:0};
+const ball={x:0,y:0,r:8,vx:0,vy:0};
+let lastDir={x:0,y:-1};
+let score=0, touchTimer=0;
+
+function reset(kickoff){
+  player.x=W/2; player.y=H*0.72; player.vx=player.vy=0;
+  ball.x=W/2; ball.y=H*0.62; ball.vx=ball.vy=0;
+  lastDir={x:0,y:-1};
+}
+function start(){ resize(); reset(true); requestAnimationFrame(loop); }
+
+// ---- input ----
+const keys={};
+addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true; if(e.key===' ')shoot();});
+addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
+
+let joy={active:false,id:null,cx:0,cy:0,dx:0,dy:0};
+let sprintHeld=false, sprintId=null;
+const btn={sprint:null,shoot:null};
+function buildButtons(){
+  const bs=Math.min(W*0.16,74);
+  btn.shoot={x:W-bs-18, y:H-bs-22, r:bs/2, label:'SHOOT', col:'#1f6feb'};
+  btn.sprint={x:W-bs*2-40, y:H-bs/2-30, r:bs*0.42, label:'SPRINT', col:'#ff6b35'};
+}
+function inCircle(px,py,b){return (px-b.x)**2+(py-b.y)**2 <= b.r*b.r;}
+
+function onStart(t){
+  for(const e of t){
+    const x=e.clientX,y=e.clientY;
+    if(btn.shoot&&inCircle(x,y,btn.shoot)){ shoot(); continue; }
+    if(btn.sprint&&inCircle(x,y,btn.sprint)){ sprintHeld=true; sprintId=e.identifier; continue; }
+    if(x < W*0.55 && !joy.active){ joy.active=true; joy.id=e.identifier; joy.cx=x; joy.cy=y; joy.dx=0; joy.dy=0; }
+  }
+}
+function onMove(t){
+  for(const e of t){
+    if(e.identifier===joy.id){
+      let dx=e.clientX-joy.cx, dy=e.clientY-joy.cy;
+      const mag=Math.hypot(dx,dy), max=48;
+      if(mag>max){dx=dx/mag*max; dy=dy/mag*max;}
+      joy.dx=dx/max; joy.dy=dy/max;
+    }
+  }
+}
+function onEnd(t){
+  for(const e of t){
+    if(e.identifier===joy.id){ joy.active=false; joy.id=null; joy.dx=0; joy.dy=0; }
+    if(e.identifier===sprintId){ sprintHeld=false; sprintId=null; }
+  }
+}
+cv.addEventListener('touchstart',e=>{e.preventDefault(); onStart(e.changedTouches);},{passive:false});
+cv.addEventListener('touchmove',e=>{e.preventDefault(); onMove(e.changedTouches);},{passive:false});
+cv.addEventListener('touchend',e=>{e.preventDefault(); onEnd(e.changedTouches);},{passive:false});
+cv.addEventListener('touchcancel',e=>{e.preventDefault(); onEnd(e.changedTouches);},{passive:false});
+// mouse fallback (desktop)
+let mouseDown=false;
+cv.addEventListener('mousedown',e=>{mouseDown=true; onStart([{clientX:e.clientX,clientY:e.clientY,identifier:'m'}]);});
+cv.addEventListener('mousemove',e=>{if(mouseDown)onMove([{clientX:e.clientX,clientY:e.clientY,identifier:'m'}]);});
+addEventListener('mouseup',()=>{mouseDown=false; onEnd([{identifier:'m'}]);});
+
+function inputDir(){
+  let x=0,y=0;
+  if(keys['a']||keys['arrowleft'])x-=1; if(keys['d']||keys['arrowright'])x+=1;
+  if(keys['w']||keys['arrowup'])y-=1; if(keys['s']||keys['arrowdown'])y+=1;
+  if(joy.active){x=joy.dx; y=joy.dy;}
+  const m=Math.hypot(x,y);
+  if(m>1){x/=m; y/=m;}
+  return {x,y,mag:Math.min(m,1)};
+}
+function isSprint(){ return sprintHeld || keys['shift']; }
+
+function shoot(){
+  const d=Math.hypot(ball.x-player.x, ball.y-player.y);
+  if(d < player.r+ball.r+22){
+    const power=12.5;
+    ball.vx=lastDir.x*power; ball.vy=lastDir.y*power;
+    touchTimer=18; // brief no auto-touch after shot
+  }
+}
+
+function loop(){
+  const dir=inputDir();
+  const sp=isSprint()?3.7:2.2;
+  // player move
+  player.vx=dir.x*sp*dir.mag; player.vy=dir.y*sp*dir.mag;
+  player.x+=player.vx; player.y+=player.vy;
+  player.x=Math.max(pitch.x+player.r,Math.min(pitch.x+pitch.w-player.r,player.x));
+  player.y=Math.max(pitch.y+player.r,Math.min(pitch.y+pitch.h-player.r,player.y));
+  if(dir.mag>0.15){lastDir.x=dir.x; lastDir.y=dir.y;}
+
+  // dribble: periodic touch when moving & near ball
+  const dist=Math.hypot(ball.x-player.x, ball.y-player.y);
+  const hasBall=dist < player.r+ball.r+24;
+  if(touchTimer>0)touchTimer--;
+  if(hasBall && dir.mag>0.2 && touchTimer===0){
+    const push=isSprint()?6.4:3.0;        // sprint pushes ball FURTHER -> looser control
+    ball.vx=lastDir.x*push; ball.vy=lastDir.y*push;
+    touchTimer=isSprint()?16:13;
+  } else if(hasBall && dir.mag<=0.2){
+    // stop & settle: ball eases to feet (close control on stop)
+    ball.vx*=0.6; ball.vy*=0.6;
+    const tx=player.x+lastDir.x*(player.r+ball.r+2), ty=player.y+lastDir.y*(player.r+ball.r+2);
+    ball.x+=(tx-ball.x)*0.18; ball.y+=(ty-ball.y)*0.18;
+  }
+  // ball physics
+  ball.x+=ball.vx; ball.y+=ball.vy;
+  ball.vx*=0.95; ball.vy*=0.95;
+  if(Math.abs(ball.vx)<0.02)ball.vx=0; if(Math.abs(ball.vy)<0.02)ball.vy=0;
+  // walls + goal
+  // goal check (top)
+  if(ball.y-ball.r<=goal.y+goal.h && ball.x>goal.x && ball.x<goal.x+goal.w){ doScore(); }
+  if(ball.x<pitch.x+ball.r){ball.x=pitch.x+ball.r; ball.vx*=-0.5;}
+  if(ball.x>pitch.x+pitch.w-ball.r){ball.x=pitch.x+pitch.w-ball.r; ball.vx*=-0.5;}
+  if(ball.y<pitch.y+ball.r){ball.y=pitch.y+ball.r; ball.vy*=-0.5;}
+  if(ball.y>pitch.y+pitch.h-ball.r){ball.y=pitch.y+pitch.h-ball.r; ball.vy*=-0.5;}
+
+  draw(dir);
+  requestAnimationFrame(loop);
+}
+
+let flashEl=document.getElementById('flash');
+function doScore(){
+  score++; document.getElementById('score').textContent=score;
+  flashEl.style.transition='none'; flashEl.style.opacity=0.55;
+  requestAnimationFrame(()=>{flashEl.style.transition='opacity .5s'; flashEl.style.opacity=0;});
+  ball.x=W/2; ball.y=H*0.6; ball.vx=ball.vy=0;
+  player.x=W/2; player.y=H*0.72;
+}
+
+function draw(dir){
+  ctx.clearRect(0,0,W,H);
+  // pitch
+  ctx.fillStyle='#1f8f4e'; ctx.fillRect(pitch.x,pitch.y,pitch.w,pitch.h);
+  // stripes
+  ctx.fillStyle='#1c8348';
+  for(let i=0;i<pitch.h;i+=44){ if((i/44)%2===0) ctx.fillRect(pitch.x,pitch.y+i,pitch.w,22); }
+  ctx.strokeStyle='#dfffe9aa'; ctx.lineWidth=2;
+  ctx.strokeRect(pitch.x,pitch.y,pitch.w,pitch.h);
+  ctx.beginPath(); ctx.moveTo(pitch.x,pitch.y+pitch.h/2); ctx.lineTo(pitch.x+pitch.w,pitch.y+pitch.h/2); ctx.stroke();
+  ctx.beginPath(); ctx.arc(pitch.x+pitch.w/2,pitch.y+pitch.h/2,46,0,7); ctx.stroke();
+  // goal
+  ctx.fillStyle='#f4f7fb'; ctx.fillRect(goal.x,goal.y-6,goal.w,12);
+  ctx.strokeStyle='#cfd8dc'; ctx.strokeRect(goal.x,goal.y-6,goal.w,12);
+  // ball trail dir
+  ctx.fillStyle='#ffffff'; ctx.beginPath(); ctx.arc(ball.x,ball.y,ball.r,0,7); ctx.fill();
+  ctx.strokeStyle='#0008'; ctx.lineWidth=1; ctx.stroke();
+  // player (chibi-ish: big head)
+  ctx.fillStyle=isSprint()?'#ff8c5a':'#27c46a';
+  ctx.beginPath(); ctx.arc(player.x,player.y,player.r,0,7); ctx.fill();
+  ctx.fillStyle='#0e1116'; ctx.beginPath(); ctx.arc(player.x+lastDir.x*5,player.y+lastDir.y*5,4,0,7); ctx.fill();
+
+  // joystick
+  if(joy.active){
+    ctx.strokeStyle='#ffffff55'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.arc(joy.cx,joy.cy,48,0,7); ctx.stroke();
+    ctx.fillStyle='#3fae6bcc';
+    ctx.beginPath(); ctx.arc(joy.cx+joy.dx*48,joy.cy+joy.dy*48,22,0,7); ctx.fill();
+  }
+  // buttons
+  drawBtn(btn.sprint, sprintHeld); drawBtn(btn.shoot,false);
+}
+function drawBtn(b,active){
+  if(!b)return;
+  ctx.fillStyle=active?'#ffffff33':b.col+'cc';
+  ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,7); ctx.fill();
+  ctx.fillStyle='#fff'; ctx.font='bold '+Math.round(b.r*0.42)+'px sans-serif';
+  ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(b.label,b.x,b.y);
+}
+
+document.getElementById('toggle').addEventListener('click',()=>{
+  const p=document.getElementById('panel');
+  p.style.display = p.style.display==='block'?'none':'block';
+});
+
+const _layout=layout;
+layout=function(){ _layout(); buildButtons(); };
+start();
+</script>
+</body>
+</html>

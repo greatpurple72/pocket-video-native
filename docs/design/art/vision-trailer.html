@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<title>足球 SLG · 愿景预告片</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;background:#000;overflow:hidden;font-family:-apple-system,"PingFang SC",Segoe UI,Arial,sans-serif;}
+  #stage{position:fixed;inset:0;background:#000;}
+  .scene{position:absolute;inset:0;opacity:0;transition:opacity .8s ease;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+  .scene.on{opacity:1;}
+  .scene img{width:100%;height:100%;object-fit:cover;transform:scale(1.08);transition:transform 6s ease;}
+  .scene.on img{transform:scale(1.2);}
+  .cap{position:absolute;left:0;right:0;bottom:14%;text-align:center;color:#fff;text-shadow:0 3px 14px #000,0 0 30px #000;padding:0 24px;}
+  .cap h1{font-size:8.5vw;font-weight:900;letter-spacing:1px;opacity:0;transform:translateY(20px);transition:all .7s ease .25s;}
+  .cap p{font-size:4.2vw;margin-top:8px;color:#ffe27a;opacity:0;transform:translateY(20px);transition:all .7s ease .45s;}
+  .scene.on .cap h1,.scene.on .cap p{opacity:1;transform:none;}
+  /* title scene */
+  #title{background:radial-gradient(circle at 50% 40%,#1b3a5a,#0a1018);}
+  #title .big{color:#fff;text-align:center;}
+  #title .big .t{font-size:13vw;font-weight:900;background:linear-gradient(180deg,#fff,#ffd23f);-webkit-background-clip:text;background-clip:text;color:transparent;}
+  #title .big .s{font-size:4.4vw;color:#9fe7bb;margin-top:10px;}
+  #title .ball{font-size:18vw;animation:spin 3s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  /* end scene */
+  #end{background:radial-gradient(circle at 50% 45%,#143a24,#08130c);flex-direction:column;color:#fff;text-align:center;}
+  #end .t{font-size:11vw;font-weight:900;background:linear-gradient(180deg,#fff,#9fe7bb);-webkit-background-clip:text;background-clip:text;color:transparent;}
+  #end .s{font-size:4vw;color:#cfe3f5;margin:10px 24px 0;}
+  #cta{margin-top:30px;background:linear-gradient(180deg,#ffe27a,#f6b73c);color:#5a3a00;font-weight:900;font-size:5vw;padding:16px 34px;border-radius:40px;border:none;text-decoration:none;}
+  #note{position:fixed;top:10px;left:0;right:0;text-align:center;color:#ffffff88;font-size:11px;}
+  #bar{position:fixed;top:0;left:0;height:4px;background:#3fae6b;width:0;z-index:9;transition:width .2s linear;}
+  #controls{position:fixed;bottom:10px;left:0;right:0;display:flex;justify-content:center;gap:14px;z-index:9;}
+  #controls button{background:#0e1b2acc;color:#cfe3f5;border:1px solid #28415e;border-radius:10px;padding:8px 16px;font-size:13px;}
+  #tap{position:fixed;inset:0;z-index:7;}
+</style>
+</head>
+<body>
+<div id="bar"></div>
+<div id="note">愿景预告 · Previz(卡通占位示意,非 UE5 成片)</div>
+<div id="stage">
+  <div class="scene" id="title"><div class="big"><div class="ball">⚽</div><div class="t">FOOTBALL SLG</div><div class="s">亲手踢的实时比赛 × 俱乐部养成帝国</div></div></div>
+  <div class="scene" data-img="mk-club.svg"><img src="mk-club.svg"/><div class="cap"><h1>经营你的俱乐部帝国</h1><p>球场 · 青训 · 训练 · 商业</p></div></div>
+  <div class="scene" data-img="mk-match.svg"><img src="mk-match.svg"/><div class="cap"><h1>亲手踢每一场实时比赛</h1><p>带球 · 传切 · 射门 — 你说了算</p></div></div>
+  <div class="scene" data-img="mk-gacha.svg"><img src="mk-gacha.svg"/><div class="cap"><h1>签下传奇球员</h1><p>越稀有越强 · 组建你的梦之队</p></div></div>
+  <div class="scene" data-img="mk-mini.svg"><img src="mk-mini.svg"/><div class="cap"><h1>踢球爽点 · 病毒式买量</h1><p>点球 / 任意球 / 过人挑战</p></div></div>
+  <div class="scene" data-img="mk-league.svg"><img src="mk-league.svg"/><div class="cap"><h1>联盟争霸 · 跨服联赛</h1><p>赛季 · 升降级 · 德比对抗</p></div></div>
+  <div class="scene" id="end"><div class="t">FOOTBALL SLG</div><div class="s">实时可控 · 全球卡通足球 SLG</div><a id="cta" href="./index.html">▶ 试玩实时 3D Demo</a></div>
+</div>
+<div id="tap"></div>
+<div id="controls"><button id="replay">↺ 重播</button><button id="skip">⏭ 下一幕</button></div>
+<script>
+const scenes=[...document.querySelectorAll('.scene')];
+const durs=[3200,4200,4600,4200,4200,4200,6000];
+let i=-1,timer=null,t0=0,raf=null;
+const bar=document.getElementById('bar');
+function show(n){
+  if(n>=scenes.length){return;}
+  scenes.forEach(s=>s.classList.remove('on'));
+  i=n; scenes[i].classList.add('on');
+  clearTimeout(timer);
+  if(i<scenes.length-1){ t0=performance.now(); tick(); timer=setTimeout(()=>show(i+1),durs[i]); }
+  else { bar.style.width='100%'; }
+}
+function tick(){ const p=Math.min((performance.now()-t0)/durs[i],1); bar.style.width=(p*100)+'%'; if(p<1)raf=requestAnimationFrame(tick); }
+document.getElementById('skip').onclick=()=>{ if(i<scenes.length-1)show(i+1); };
+document.getElementById('replay').onclick=()=>show(0);
+document.getElementById('tap').onclick=()=>{ if(i<scenes.length-1)show(i+1); else show(0); };
+show(0);
+</script>
+</body>
+</html>

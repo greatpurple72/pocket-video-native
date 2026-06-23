@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="1280" viewBox="0 0 720 1280" font-family="Segoe UI, Arial, sans-serif">
+<defs>
+<radialGradient id="burst" cx="0.5" cy="0.42" r="0.6"><stop offset="0" stop-color="#fff7d6"/><stop offset="0.5" stop-color="#ffd23f"/><stop offset="1" stop-color="#7a3bd6"/></radialGradient>
+<linearGradient id="cardg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe9a8"/><stop offset="1" stop-color="#f6b73c"/></linearGradient>
+</defs>
+<rect width="720" height="1280" fill="#2a1450"/>
+<rect width="720" height="1280" fill="url(#burst)" opacity="0.9"/>
+<!-- rays -->
+<g stroke="#ffffff55" stroke-width="14">
+<line x1="360" y1="540" x2="40" y2="120"/><line x1="360" y1="540" x2="680" y2="120"/>
+<line x1="360" y1="540" x2="20" y2="540"/><line x1="360" y1="540" x2="700" y2="540"/>
+<line x1="360" y1="540" x2="120" y2="980"/><line x1="360" y1="540" x2="600" y2="980"/>
+</g>
+
+<text x="360" y="120" font-size="40" font-weight="900" text-anchor="middle" fill="#fff">⭐ 签约揭晓 ⭐</text>
+
+<!-- UR card -->
+<g>
+<rect x="220" y="200" width="280" height="420" rx="24" fill="url(#cardg)" stroke="#fff" stroke-width="6"/>
+<rect x="240" y="220" width="240" height="300" rx="14" fill="#1d2b4a"/>
+<!-- chibi footballer -->
+<circle cx="360" cy="430" r="60" fill="#27c46a"/><circle cx="360" cy="350" r="46" fill="#ffcc99"/>
+<path d="M314 330 q46 -50 92 0" fill="#3a2a1a"/>
+<text x="360" y="560" font-size="30" font-weight="900" text-anchor="middle" fill="#5a3a00">传奇前锋</text>
+<text x="360" y="600" font-size="40" text-anchor="middle" fill="#c8392f">★★★★★</text>
+<rect x="250" y="232" width="74" height="40" rx="10" fill="#c8392f"/><text x="287" y="261" font-size="24" font-weight="900" text-anchor="middle" fill="#fff">UR</text>
+</g>
+
+<!-- stats -->
+<g font-size="22" fill="#fff">
+<rect x="120" y="660" width="480" height="180" rx="16" fill="#0e1b2acc"/>
+<text x="150" y="704">速度 95</text><text x="380" y="704">盘带 93</text>
+<text x="150" y="752">射门 96</text><text x="380" y="752">传球 88</text>
+<text x="150" y="800">体能 90</text><text x="380" y="800">技能 弧线任意球</text>
+</g>
+
+<!-- buttons -->
+<rect x="90" y="900" width="250" height="100" rx="20" fill="#3fae6b"/><text x="215" y="950" font-size="26" font-weight="800" text-anchor="middle" fill="#fff">单抽</text><text x="215" y="982" font-size="18" text-anchor="middle" fill="#eafff0">🎯 30</text>
+<rect x="380" y="900" width="250" height="100" rx="20" fill="#f6b73c"/><text x="505" y="950" font-size="26" font-weight="800" text-anchor="middle" fill="#5a3a00">十连抽</text><text x="505" y="982" font-size="18" text-anchor="middle" fill="#5a3a00">🎯 300</text>
+<text x="360" y="1080" font-size="20" text-anchor="middle" fill="#fff">eFootball 式球员收集 · 越稀有越强</text>
+</svg>

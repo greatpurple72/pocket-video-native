@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="900" viewBox="0 0 1240 900" font-family="Segoe UI, Arial, sans-serif">
+  <rect width="1240" height="900" fill="#0e1116"/>
+  <text x="620" y="48" fill="#ffffff" font-size="30" font-weight="700" text-anchor="middle">足球 SLG — 美术风格定调 PrevizGate</text>
+  <text x="620" y="80" fill="#8b97a6" font-size="16" text-anchor="middle">风格板 v1 ｜ 三个候选方向 + 推荐 ｜ 真实概念图请用 art-style-previz.md 里的提示词生成</text>
+
+  <!-- Columns -->
+  <!-- Option A: Realistic -->
+  <g>
+    <rect x="40" y="110" width="360" height="730" rx="14" fill="#161b22" stroke="#2b333d"/>
+    <text x="220" y="150" fill="#ffffff" font-size="22" font-weight="700" text-anchor="middle">A · 写实 / 转播级</text>
+    <text x="220" y="176" fill="#8b97a6" font-size="14" text-anchor="middle">eFootball / EA FC 方向</text>
+
+    <!-- proportion silhouette: realistic ~7.5 heads -->
+    <g transform="translate(220,210)">
+      <circle cx="0" cy="18" r="16" fill="#c9d1d9"/>
+      <rect x="-18" y="36" width="36" height="120" rx="14" fill="#c9d1d9"/>
+      <rect x="-16" y="156" width="12" height="80" rx="6" fill="#c9d1d9"/>
+      <rect x="4" y="156" width="12" height="80" rx="6" fill="#c9d1d9"/>
+    </g>
+    <text x="220" y="470" fill="#6f7b8a" font-size="13" text-anchor="middle">头身比 ≈ 1:7.5(真实人体)</text>
+
+    <!-- palette -->
+    <g transform="translate(70,495)">
+      <rect width="60" height="36" fill="#2e7d32"/><rect x="60" width="60" height="36" fill="#1b5e20"/>
+      <rect x="120" width="60" height="36" fill="#455a64"/><rect x="180" width="60" height="36" fill="#cfd8dc"/>
+      <rect x="240" width="60" height="36" fill="#263238"/>
+    </g>
+    <text x="220" y="560" fill="#6f7b8a" font-size="13" text-anchor="middle">低饱和 · 真实草皮/球衣</text>
+
+    <text x="60" y="605" fill="#7fd17f" font-size="14">＋ 真实足球质感最强</text>
+    <text x="60" y="630" fill="#7fd17f" font-size="14">＋ 体育核心向用户买账</text>
+    <text x="60" y="655" fill="#ff8a80" font-size="14">－ 美术/动画成本最高</text>
+    <text x="60" y="680" fill="#ff8a80" font-size="14">－ 单人+AI 最难达标</text>
+    <text x="60" y="705" fill="#ff8a80" font-size="14">－ 移动端性能压力大</text>
+    <text x="60" y="730" fill="#ff8a80" font-size="14">－ 与 chibi 买量素材割裂</text>
+    <text x="220" y="800" fill="#9aa6b2" font-size="13" text-anchor="middle">单人可行性 ★☆☆☆☆</text>
+  </g>
+
+  <!-- Option B: Semi-stylized (RECOMMENDED) -->
+  <g>
+    <rect x="440" y="110" width="360" height="730" rx="14" fill="#15211a" stroke="#3fae6b" stroke-width="2"/>
+    <rect x="600" y="98" width="40" height="40" rx="20" fill="#3fae6b"/>
+    <text x="620" y="125" fill="#08130c" font-size="22" font-weight="700" text-anchor="middle">★</text>
+    <text x="620" y="170" fill="#ffffff" font-size="22" font-weight="700" text-anchor="middle">B · 风格化半写实</text>
+    <text x="620" y="196" fill="#9fe7bb" font-size="14" text-anchor="middle">推荐 · 像真足球但更宽容</text>
+
+    <!-- proportion silhouette: stylized ~6 heads -->
+    <g transform="translate(620,222)">
+      <circle cx="0" cy="20" r="20" fill="#c9d1d9"/>
+      <rect x="-20" y="40" width="40" height="100" rx="16" fill="#c9d1d9"/>
+      <rect x="-18" y="140" width="14" height="66" rx="7" fill="#c9d1d9"/>
+      <rect x="6" y="140" width="14" height="66" rx="7" fill="#c9d1d9"/>
+    </g>
+    <text x="620" y="470" fill="#6f7b8a" font-size="13" text-anchor="middle">头身比 ≈ 1:6(略夸张,更上镜)</text>
+
+    <g transform="translate(470,495)">
+      <rect width="60" height="36" fill="#27c46a"/><rect x="60" width="60" height="36" fill="#0f9d58"/>
+      <rect x="120" width="60" height="36" fill="#1f6feb"/><rect x="180" width="60" height="36" fill="#ffd23f"/>
+      <rect x="240" width="60" height="36" fill="#ff6b35"/>
+    </g>
+    <text x="620" y="560" fill="#6f7b8a" font-size="13" text-anchor="middle">中高饱和 · 干净 PBR · 全球向</text>
+
+    <text x="460" y="605" fill="#7fd17f" font-size="14">＋ 像真足球,又不苛求拟真</text>
+    <text x="460" y="630" fill="#7fd17f" font-size="14">＋ Fab/Mixamo 资源易适配</text>
+    <text x="460" y="655" fill="#7fd17f" font-size="14">＋ 跨端性能可控</text>
+    <text x="460" y="680" fill="#7fd17f" font-size="14">＋ 单人+AI 现实可达</text>
+    <text x="460" y="705" fill="#ffd180" font-size="14">○ 需统一一套风格规范</text>
+    <text x="620" y="800" fill="#9fe7bb" font-size="13" text-anchor="middle" font-weight="700">单人可行性 ★★★★☆</text>
+  </g>
+
+  <!-- Option C: Chibi -->
+  <g>
+    <rect x="840" y="110" width="360" height="730" rx="14" fill="#161b22" stroke="#2b333d"/>
+    <text x="1020" y="150" fill="#ffffff" font-size="22" font-weight="700" text-anchor="middle">C · 卡通 / chibi</text>
+    <text x="1020" y="176" fill="#8b97a6" font-size="14" text-anchor="middle">Last War / Kingshot 方向</text>
+
+    <!-- proportion silhouette: chibi ~3 heads -->
+    <g transform="translate(1020,210)">
+      <circle cx="0" cy="40" r="40" fill="#c9d1d9"/>
+      <rect x="-26" y="78" width="52" height="70" rx="20" fill="#c9d1d9"/>
+      <rect x="-22" y="148" width="16" height="40" rx="8" fill="#c9d1d9"/>
+      <rect x="8" y="148" width="16" height="40" rx="8" fill="#c9d1d9"/>
+    </g>
+    <text x="1020" y="470" fill="#6f7b8a" font-size="13" text-anchor="middle">头身比 ≈ 1:3(大头萌系)</text>
+
+    <g transform="translate(870,495)">
+      <rect width="60" height="36" fill="#4ad991"/><rect x="60" width="60" height="36" fill="#2bb3ff"/>
+      <rect x="120" width="60" height="36" fill="#ffcf3f"/><rect x="180" width="60" height="36" fill="#ff5db1"/>
+      <rect x="240" width="60" height="36" fill="#a06bff"/>
+    </g>
+    <text x="1020" y="560" fill="#6f7b8a" font-size="13" text-anchor="middle">高饱和 · 糖果色 · 强吸睛</text>
+
+    <text x="860" y="605" fill="#7fd17f" font-size="14">＋ 买量/病毒传播最强</text>
+    <text x="860" y="630" fill="#7fd17f" font-size="14">＋ 成本最低、性能最好</text>
+    <text x="860" y="655" fill="#7fd17f" font-size="14">＋ 休闲受众最广</text>
+    <text x="860" y="680" fill="#ff8a80" font-size="14">－ 削弱"真踢球"的代入感</text>
+    <text x="860" y="705" fill="#ff8a80" font-size="14">－ 与实时 11v11 体育调性冲突</text>
+    <text x="1020" y="800" fill="#9aa6b2" font-size="13" text-anchor="middle">单人可行性 ★★★★☆</text>
+  </g>
+
+  <!-- recommendation strip -->
+  <rect x="40" y="852" width="1160" height="34" rx="8" fill="#10261a" stroke="#3fae6b"/>
+  <text x="620" y="875" fill="#9fe7bb" font-size="15" text-anchor="middle">推荐:核心比赛=B 风格化半写实 ｜ 买量小游戏/广告=C chibi(解耦,复刻 Last War"广告≠游戏"打法)</text>
+</svg>

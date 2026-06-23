@@ -1,0 +1,16 @@
+{
+	"FileVersion": 3,
+	"EngineAssociation": "5.4",
+	"Category": "",
+	"Description": "Football SLG — Phase 0 greybox prototype (ball physics + dribble + follow camera)",
+	"Modules": [
+		{
+			"Name": "FootballSLG",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	],
+	"Plugins": [
+		{ "Name": "EnhancedInput", "Enabled": true }
+	]
+}
